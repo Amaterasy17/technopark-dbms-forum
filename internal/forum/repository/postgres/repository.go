@@ -6,10 +6,10 @@ import (
 )
 
 type postgresForumRepository struct {
-	Conn *pgx.Conn
+	Conn *pgx.ConnPool
 }
 
-func NewPostgresForumRepository(Conn *pgx.Conn) domain.ForumRepository {
+func NewPostgresForumRepository(Conn *pgx.ConnPool) domain.ForumRepository {
 	return &postgresForumRepository{Conn: Conn}
 }
 
