@@ -45,10 +45,11 @@ func main() {
 	forumUsecase := forumUseCase.NewForumUsecase(forumRepository)
 	forumHandlers.NewForumHandler(router, forumUsecase)
 
+	fmt.Println("Starting server on localhost:5000")
 	addr := ":5000"
 	err = http.ListenAndServe(addr, router)
 	if err != nil {
 		fmt.Println("error of starting server")
 	}
-	fmt.Println("Starting server on localhost:5000")
+
 }
