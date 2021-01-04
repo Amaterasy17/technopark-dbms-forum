@@ -1,48 +1,44 @@
 CREATE EXTENSION IF NOT EXISTS citext;
 
-CREATE UNLOGGED TABLE "users"
+CREATE UNLOGGED TABLE users
 (
-    About    text,
-    Email    citext UNIQUE,
+    Nickname citext PRIMARY KEY,
     FullName text NOT NULL,
-    Nickname citext PRIMARY KEY
+    About    text,
+    Email    citext UNIQUE
 );
 
 CREATE UNLOGGED TABLE forum
 (
-    "user"  citext,
-    Posts   BIGINT DEFAULT 0,
     Slug    citext PRIMARY KEY,
-    Threads INT    DEFAULT 0,
-    title   text,
-    FOREIGN KEY ("user") REFERENCES "users" (nickname)
+    "user"  citext REFERENCES "users" (Nickname),
+    Title   text NOT NULL,
+    Posts   BIGINT DEFAULT 0,
+    Threads INT    DEFAULT 0
 );
 
 CREATE UNLOGGED TABLE thread
 (
-    author  citext,
-    created timestamp with time zone default now(),
-    forum   citext,
     id      SERIAL PRIMARY KEY,
-    message text NOT NULL,
+    Title   text not null,
+    Author  citext REFERENCES "users" (Nickname),
+    Created timestamp with time zone default now(),
+    Forum   citext REFERENCES "forum" (slug),
+    Message text NOT NULL,
     slug    citext UNIQUE,
-    title   text not null,
-    votes   INT                      default 0,
-    FOREIGN KEY (author) REFERENCES "users" (nickname),
-    FOREIGN KEY (forum) REFERENCES "forum" (slug)
+    Votes   INT default 0
 );
 
 CREATE UNLOGGED TABLE post
 (
-    author   citext NOT NULL,
-    created  timestamp with time zone default now(),
-    forum    citext,
     id       BIGSERIAL PRIMARY KEY,
+    Author   citext REFERENCES "users" (nickname),
+    Created  timestamp with time zone default now(),
+    Forum    citext,
     isEdited BOOLEAN                  DEFAULT FALSE,
-    message  text   NOT NULL,
-    parent   BIGINT                   DEFAULT 0,
-    thread   INT,
-    FOREIGN KEY (author) REFERENCES "users" (nickname),
+    Message  text   NOT NULL,
+    Parent   BIGINT                   DEFAULT 0,
+    Thread   INT,
     FOREIGN KEY (forum) REFERENCES "forum" (slug),
     FOREIGN KEY (thread) REFERENCES "thread" (id),
     FOREIGN KEY (parent) REFERENCES "post" (id)

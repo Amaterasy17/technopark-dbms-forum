@@ -1,9 +1,13 @@
 package forum
 
+import (
+	"technopark-dbms-forum/models"
+)
+
 type ForumUseCase interface {
 	Forum() error
 }
 
 type ForumRepository interface {
-	InsertForum() error
+	InsertForum(forum models.Forum) error
 }
