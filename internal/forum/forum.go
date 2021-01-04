@@ -5,9 +5,10 @@ import (
 )
 
 type ForumUseCase interface {
-	Forum() error
+	Forum(forum models.Forum) (models.Forum, error)
 }
 
 type ForumRepository interface {
 	InsertForum(forum models.Forum) error
+	CheckForum(forum models.Forum) (models.Forum, bool)
 }

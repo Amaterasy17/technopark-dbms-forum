@@ -1,11 +1,13 @@
 package delivery
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
-	"strconv"
 	"strings"
 	domain "technopark-dbms-forum/internal/forum"
+	"technopark-dbms-forum/models"
 )
 
 type ForumHandler struct {
@@ -20,13 +22,21 @@ func NewForumHandler(r *mux.Router, forumUseCase domain.ForumUseCase) {
 }
 
 func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
+	forum := models.Forum{}
+	err := json.NewDecoder(r.Body).Decode(&forum)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+
+
+
 	w.WriteHeader(http.StatusOK)
 }
 
 func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
-	slug, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/forum/"))
-	if err != nil {
-		return
-	}
-	print(slug)
+	slug := strings.TrimPrefix(r.URL.Path, "/forum/")
+	slug = strings.TrimRight(slug, "/create")
+	fmt.Println(slug)
 }
