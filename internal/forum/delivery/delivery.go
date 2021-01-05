@@ -31,6 +31,8 @@ func NewForumHandler(r *mux.Router, forumUseCase domain.ForumUseCase) {
 	r.HandleFunc("/api/user/{nickname}/create", handler.CreateUser).Methods(http.MethodPost)
 	r.HandleFunc("/api/user/{nickname}/profile", handler.ProfileUser).Methods(http.MethodGet)
 	r.HandleFunc("/api/user/{nickname}/profile", handler.ChangeProfileInformation).Methods(http.MethodPost)
+	r.HandleFunc("/api/forum/{slug}/details", handler.ForumInfo).Methods(http.MethodGet)
+
 }
 
 func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
@@ -186,4 +188,13 @@ func (f *ForumHandler) ChangeProfileInformation(w http.ResponseWriter, r *http.R
 
 	w.WriteHeader(models.GetStatusCodeGet(err))
 	w.Write(body)
+}
+
+func (f *ForumHandler) ForumInfo(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("forumInfo")
+	slug := strings.TrimPrefix(r.URL.Path, "/api/forum/")
+	slug = strings.TrimSuffix(slug, "/details")
+	fmt.Println(slug)
+
+	//realize of finding forum details
 }
