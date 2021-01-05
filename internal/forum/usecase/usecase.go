@@ -49,3 +49,22 @@ func (f *ForumUsecase) CreateUser(user models.User) ([]models.User, error) {
 func (f *ForumUsecase) GetUser(nickname string) (models.User, error) {
 	return f.forumRepo.SelectUser(nickname)
 }
+
+func (f *ForumUsecase) ChangeUserProfile(user models.User) (models.User, error) {
+	_, err := f.forumRepo.SelectUser(user.Nickname)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	_, err = f.forumRepo.SelectUserByEmail(user)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	userModel, err := f.forumRepo.UpdateUserInfo(user)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return userModel, nil
+}

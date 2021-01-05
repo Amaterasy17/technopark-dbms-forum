@@ -36,8 +36,16 @@ func GetStatusCodeGet(err error) int {
 	if err == nil {
 		return http.StatusOK
 	}
-	return http.StatusNotFound
+	switch err {
+	case ErrNotFound:
+		return http.StatusNotFound // 404
+	case ErrConflict:
+		return http.StatusConflict // 409
+	default:
+		return http.StatusInternalServerError // 500
+	}
 }
+
 type Error struct {
 	Message string `json:"message"`
 }

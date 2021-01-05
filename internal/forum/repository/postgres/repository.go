@@ -76,3 +76,35 @@ func (p *postgresForumRepository) SelectUser(user string) (models.User, error) {
 	}
 	return userModel, nil
 }
+
+func (p *postgresForumRepository) SelectUserByEmail(user models.User) (models.User, error) {
+	var userModel models.User
+	row := p.Conn.QueryRow(`Select nickname, email from users Where email=$1;`, user.Email)
+	err := row.Scan(&userModel.Nickname, &userModel.Email)
+	if err != nil {
+		return models.User{}, nil
+	}
+	if userModel.Nickname == user.Nickname {
+		return models.User{}, nil
+	}
+	return userModel, models.ErrConflict
+}
+
+func (p *postgresForumRepository) UpdateUserInfo(user models.User) (models.User, error) {
+	_, err := p.Conn.Exec(`UPDATE users SET fullname=$1 WHERE nickname=$2;`, user.FullName, user.Nickname)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	_, err = p.Conn.Exec(`UPDATE users SET about=$1 WHERE nickname=$2;`, user.About, user.Nickname)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	_, err = p.Conn.Exec(`UPDATE users SET email=$1 WHERE nickname=$2;`, user.Email, user.Nickname)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}

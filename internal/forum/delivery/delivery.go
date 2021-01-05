@@ -26,10 +26,11 @@ func JSONError(message string) []byte {
 func NewForumHandler(r *mux.Router, forumUseCase domain.ForumUseCase) {
 	handler := &ForumHandler{ForumUseCase: forumUseCase}
 
-	r.HandleFunc("/forum/create", handler.Forum).Methods(http.MethodPost)
-	r.HandleFunc("/forum/{slug}/create", handler.CreateThread).Methods(http.MethodPost)
-	r.HandleFunc("/user/{nickname}/create", handler.CreateUser).Methods(http.MethodPost)
-	r.HandleFunc("/user/{nickname}/profile", handler.ProfileUser).Methods(http.MethodGet)
+	r.HandleFunc("/api/forum/create", handler.Forum).Methods(http.MethodPost)
+	r.HandleFunc("/api/forum/{slug}/create", handler.CreateThread).Methods(http.MethodPost)
+	r.HandleFunc("/api/user/{nickname}/create", handler.CreateUser).Methods(http.MethodPost)
+	r.HandleFunc("/api/user/{nickname}/profile", handler.ProfileUser).Methods(http.MethodGet)
+	r.HandleFunc("/api/user/{nickname}/profile", handler.ChangeProfileInformation).Methods(http.MethodPost)
 }
 
 func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
@@ -47,14 +48,14 @@ func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
-	slug := strings.TrimPrefix(r.URL.Path, "/forum/")
+	slug := strings.TrimPrefix(r.URL.Path, "/api/forum/")
 	slug = strings.TrimSuffix(slug, "/create")
 	fmt.Println(slug)
 }
 
 func (f *ForumHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Create user")
-	nickname := strings.TrimPrefix(r.URL.Path, "/user/")
+	nickname := strings.TrimPrefix(r.URL.Path, "/api/user/")
 	nickname = strings.TrimSuffix(nickname, "/create")
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -96,8 +97,8 @@ func (f *ForumHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (f *ForumHandler) ProfileUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("get profile user")
-	nickname := strings.TrimPrefix(r.URL.Path, "/user/")
-	nickname = strings.TrimSuffix(nickname, "/create")
+	nickname := strings.TrimPrefix(r.URL.Path, "/api/user/")
+	nickname = strings.TrimSuffix(nickname, "/profile")
 	fmt.Println(nickname)
 
 	user, err := f.ForumUseCase.GetUser(nickname)
@@ -118,5 +119,40 @@ func (f *ForumHandler) ProfileUser(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(models.GetStatusCodeGet(err))
 	w.Write(body)
-	return
+}
+
+func (f *ForumHandler) ChangeProfileInformation(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("change profile user")
+	nickname := strings.TrimPrefix(r.URL.Path, "/api/user/")
+	nickname = strings.TrimSuffix(nickname, "/profile")
+	fmt.Println(nickname)
+
+	user := models.User{}
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	user.Nickname = nickname
+
+	userModel, err := f.ForumUseCase.ChangeUserProfile(user)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	body, err := json.Marshal(userModel)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(models.GetStatusCodeGet(err))
+	w.Write(body)
 }
