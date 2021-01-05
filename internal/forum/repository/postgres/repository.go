@@ -66,3 +66,13 @@ func (p *postgresForumRepository) InsertUser(user models.User) error {
 	}
 	return nil
 }
+
+func (p *postgresForumRepository) SelectUser(user string) (models.User, error) {
+	var userModel models.User
+	row := p.Conn.QueryRow(`Select nickname, fullname, about, email From users Where nickname=$1;`, user)
+	err := row.Scan(&userModel.Nickname, &userModel.FullName, &userModel.About, &userModel.Email)
+	if err != nil {
+		return models.User{}, models.ErrNotFound
+	}
+	return userModel, nil
+}

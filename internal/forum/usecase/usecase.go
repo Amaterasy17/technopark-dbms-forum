@@ -45,3 +45,7 @@ func (f *ForumUsecase) CreateUser(user models.User) ([]models.User, error) {
 	users = append(users, user)
 	return users, nil
 }
+
+func (f *ForumUsecase) GetUser(nickname string) (models.User, error) {
+	return f.forumRepo.SelectUser(nickname)
+}

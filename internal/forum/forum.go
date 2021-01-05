@@ -7,6 +7,7 @@ import (
 type ForumUseCase interface {
 	Forum(forum models.Forum) (models.Forum, error)
 	CreateUser(user models.User) ([]models.User, error)
+	GetUser(nickname string) (models.User, error)
 }
 
 type ForumRepository interface {
@@ -14,4 +15,5 @@ type ForumRepository interface {
 	CheckForum(forum models.Forum) (models.Forum, bool)
 	SelectUsers(user models.User) ([]models.User, error)
 	InsertUser(user models.User) error
+	SelectUser(user string) (models.User, error)
 }
