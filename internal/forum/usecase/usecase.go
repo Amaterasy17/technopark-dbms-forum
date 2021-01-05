@@ -15,17 +15,25 @@ func NewForumUsecase(forumRepo domain.ForumRepository) domain.ForumUseCase {
 }
 
 func (f *ForumUsecase) Forum(forum models.Forum) (models.Forum, error) {
-	checkForum, forumBool := f.forumRepo.CheckForum(forum)
-	if !forumBool {
-		return checkForum, nil
+	_, err := f.forumRepo.SelectUser(forum.User)
+	if err != nil {
+		return models.Forum{}, err
 	}
 
-	//err := f.forumRepo.InsertForum(forum)
-	//if err != nil {
-	//	return err
-	//}
+	forumModel, err := f.forumRepo.SelectForum(forum.Slug)
+	if err == nil {
+		return forumModel, models.ErrConflict
+	}
 
-	return models.Forum{}, nil
+	err = f.forumRepo.InsertForum(forum)
+	if err != nil {
+		return models.Forum{}, err
+	}
+
+	forum.Posts = 0
+	forum.Threads = 0
+
+	return forum, nil
 }
 
 func (f *ForumUsecase) CreateUser(user models.User) ([]models.User, error) {

@@ -38,13 +38,44 @@ func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&forum)
 	if err != nil {
 		fmt.Println(err)
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	forum, err = f.ForumUseCase.Forum(forum)
+	status := models.GetStatusCodePost(err)
+	if status == 409 {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodePost(err))
 
+		body, err := json.Marshal(forum)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(JSONError(err.Error()))
+			return
+		}
 
-	w.WriteHeader(http.StatusOK)
+		w.Write(body)
+		return
+	}
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	body, err := json.Marshal(forum)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(models.GetStatusCodePost(err))
+	w.Write(body)
 }
 
 func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {

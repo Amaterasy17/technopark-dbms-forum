@@ -24,6 +24,17 @@ func (p *postgresForumRepository) InsertForum(forum models.Forum) error {
 	return nil
 }
 
+func (p *postgresForumRepository) SelectForum(forumName string) (models.Forum, error) {
+	var forum models.Forum
+	row := p.Conn.QueryRow(`Select slug, "user", title, posts, threads From forum
+				Where slug=$1`, forumName)
+	err := row.Scan(&forum.Slug, &forum.User, &forum.Title, &forum.Posts, &forum.Threads)
+	if err != nil {
+		return models.Forum{}, models.ErrNotFound
+	}
+	return forum, nil
+}
+
 func (p *postgresForumRepository) CheckForum(forum models.Forum) (models.Forum, bool) {
 	resultForum := models.Forum{
 		Posts: -1,

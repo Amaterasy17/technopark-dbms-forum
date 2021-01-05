@@ -19,4 +19,5 @@ type ForumRepository interface {
 	SelectUser(user string) (models.User, error)
 	SelectUserByEmail(user models.User) (models.User, error)
 	UpdateUserInfo(user models.User) (models.User, error)
+	SelectForum(forumName string) (models.Forum, error)
 }
