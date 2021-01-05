@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"fmt"
 	domain "technopark-dbms-forum/internal/forum"
 	"technopark-dbms-forum/models"
 )
@@ -25,4 +26,22 @@ func (f *ForumUsecase) Forum(forum models.Forum) (models.Forum, error) {
 	//}
 
 	return models.Forum{}, nil
+}
+
+func (f *ForumUsecase) CreateUser(user models.User) ([]models.User, error) {
+	var users []models.User
+	users, err := f.forumRepo.SelectUsers(user)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if len(users) != 0 {
+		return users, models.ErrConflict
+	}
+
+	err = f.forumRepo.InsertUser(user)
+	if err != nil {
+		return nil, err
+	}
+	users = append(users, user)
+	return users, nil
 }

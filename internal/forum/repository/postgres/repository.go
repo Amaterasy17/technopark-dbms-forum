@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"fmt"
 	"github.com/jackc/pgx"
 	domain "technopark-dbms-forum/internal/forum"
 	models "technopark-dbms-forum/models"
@@ -34,4 +35,34 @@ func (p *postgresForumRepository) CheckForum(forum models.Forum) (models.Forum, 
 		return models.Forum{},false
 	}
 	return resultForum, true
+}
+
+func (p *postgresForumRepository) SelectUsers(user models.User) ([]models.User, error) {
+	var users []models.User
+	rows, err := p.Conn.Query(`Select Nickname, FullName, About, Email From users Where Nickname=$1 or Email=$2;`,
+														user.Nickname, user.Email)
+	defer rows.Close()
+	if err != nil {
+		fmt.Println(err)
+		return users, err
+	}
+	for rows.Next() {
+		var userModel models.User
+		err := rows.Scan(&userModel.Nickname, &userModel.FullName, &userModel.About, &userModel.Email)
+		if err != nil {
+			return users, err
+		}
+		users = append(users, userModel)
+	}
+
+	return users, nil
+}
+
+func (p *postgresForumRepository) InsertUser(user models.User) error {
+	_, err := p.Conn.Exec(	`Insert INTO users(Nickname, FullName, About, Email) VALUES ($1, $2, $3, $4);`,
+		user.Nickname, user.FullName, user.About, user.Email)
+	if err != nil {
+		return err
+	}
+	return nil
 }
