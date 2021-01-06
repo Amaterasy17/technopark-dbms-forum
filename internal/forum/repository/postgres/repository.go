@@ -141,3 +141,33 @@ func (p *postgresForumRepository) InsertThread(thread models.Thread) error {
 	}
 	return nil
 }
+
+func (p *postgresForumRepository) SelectThreadById(id int) (models.Thread, error) {
+	var thread models.Thread
+	row := p.Conn.QueryRow(`Select id, title, author, forum, message, votes, slug, created from thread
+							Where id=$1;`, id)
+	err := row.Scan(&thread.Id, &thread.Title, &thread.Author, &thread.Forum, &thread.Message, &thread.Votes,
+		&thread.Slug, &thread.Created)
+	if err != nil {
+		return models.Thread{}, models.ErrNotFound
+	}
+	return thread, nil
+}
+
+func (p *postgresForumRepository) CheckParent(post models.Post) bool {
+	var id int
+	row := p.Conn.QueryRow(`Select id from post where id=$1;`, post.Parent)
+	err := row.Scan(&id)
+	if err != nil {
+		return false
+	}
+	return true
+}
+func (p *postgresForumRepository) InsertPost(post models.Post) (models.Post, error) {
+	row := p.Conn.QueryRow(`INSERT INTO post(author, created, forum, message, parent, thread) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`,
+		post.Author, post.Created, post.Forum, post.Message, post.Parent, post.Thread)
+	var postModel models.Post
+	err := row.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
+		&postModel.Message, &postModel.Parent, &postModel.Thread)
+	return postModel, err
+}

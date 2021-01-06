@@ -2,8 +2,11 @@ package usecase
 
 import (
 	"fmt"
+	"github.com/google/uuid"
+	"strconv"
 	domain "technopark-dbms-forum/internal/forum"
 	"technopark-dbms-forum/models"
+	"time"
 )
 
 type ForumUsecase struct {
@@ -96,11 +99,20 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 		return models.Thread{}, err
 	}
 
-	threadModel, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
-	if err == nil {
-		return threadModel, models.ErrConflict
+	if (thread.Slug != "") {
+		threadModel, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
+		if err == nil {
+			return threadModel, models.ErrConflict
+		}
+	} else {
+		slug, err := uuid.NewRandom()
+		if err != nil {
+			return models.Thread{}, err
+		}
+		thread.Slug = slug.String()
 	}
-	fmt.Println("pered insertom")
+
+
 	err = f.forumRepo.InsertThread(thread)
 	if err != nil {
 		return models.Thread{}, err
@@ -114,4 +126,50 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 	}
 
 	return result, nil
+}
+
+func (f *ForumUsecase) CreatePosts(posts []models.Post, slug string) ([]models.Post, error) {
+	id, err := strconv.Atoi(slug)
+	var thread models.Thread
+	if err != nil {
+		thread, err = f.forumRepo.SelectThreadBySlug(slug)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		thread, err = f.forumRepo.SelectThreadById(id)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _, post := range posts {
+		_, err := f.forumRepo.SelectUser(post.Author)
+		if err != nil {
+			return nil, err
+		}
+
+		if post.Parent != 0 && !f.forumRepo.CheckParent(post) {
+			return nil, models.ErrConflict
+		}
+	}
+
+	created := time.Now()
+
+	var postsCreated []models.Post
+	for _, post := range posts {
+		post.Thread = thread.Id
+		post.Forum = thread.Forum
+		post.Created = created
+
+		post, err = f.forumRepo.InsertPost(post)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+
+		postsCreated = append(postsCreated, post)
+	}
+
+	return postsCreated, nil
 }

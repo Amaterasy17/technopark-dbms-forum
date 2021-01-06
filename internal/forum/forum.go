@@ -11,6 +11,7 @@ type ForumUseCase interface {
 	ChangeUserProfile(user models.User) (models.User, error)
 	ForumDetails(slug string) (models.Forum, error)
 	CreatingThread(thread models.Thread) (models.Thread, error)
+	CreatePosts(posts []models.Post, slug string) ([]models.Post, error)
 }
 
 type ForumRepository interface {
@@ -24,4 +25,7 @@ type ForumRepository interface {
 	SelectForum(forumName string) (models.Forum, error)
 	SelectThreadBySlug(slug string) (models.Thread, error)
 	InsertThread(thread models.Thread) error
+	SelectThreadById(id int) (models.Thread, error)
+	CheckParent(post models.Post) bool
+	InsertPost(post models.Post) (models.Post, error)
 }

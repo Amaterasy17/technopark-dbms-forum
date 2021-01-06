@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Forum struct {
 	Title   string `json:"title"`
@@ -38,4 +40,15 @@ type User struct {
 	FullName string `json:"fullname"`
 	About    string `json:"about"`
 	Email    string `json:"email"`
+}
+
+type Post struct {
+	ID       int       `json:"id"`
+	Author   string    `json:"author"`
+	Created  time.Time `json:"created"`
+	Forum    string    `json:"forum"`
+	IsEdited bool      `json:"isEdited"`
+	Message  string    `json:"message"`
+	Parent   int       `json:"parent"`
+	Thread   int       `json:"thread,"`
 }

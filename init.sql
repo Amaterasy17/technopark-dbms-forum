@@ -40,6 +40,6 @@ CREATE UNLOGGED TABLE post
     Parent   BIGINT                   DEFAULT 0,
     Thread   INT,
     FOREIGN KEY (forum) REFERENCES "forum" (slug),
-    FOREIGN KEY (thread) REFERENCES "thread" (id),
-    FOREIGN KEY (parent) REFERENCES "post" (id)
+    FOREIGN KEY (thread) REFERENCES "thread" (id)
+--     FOREIGN KEY (parent) REFERENCES "post" (id)
 );

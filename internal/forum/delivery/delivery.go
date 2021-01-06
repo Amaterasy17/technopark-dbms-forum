@@ -33,6 +33,7 @@ func NewForumHandler(r *mux.Router, forumUseCase domain.ForumUseCase) {
 	r.HandleFunc("/api/user/{nickname}/profile", handler.ProfileUser).Methods(http.MethodGet)
 	r.HandleFunc("/api/user/{nickname}/profile", handler.ChangeProfileInformation).Methods(http.MethodPost)
 	r.HandleFunc("/api/forum/{slug}/details", handler.ForumInfo).Methods(http.MethodGet)
+	r.HandleFunc("/api/thread/{slug_or_id}/create", handler.CreatePost).Methods(http.MethodPost)
 
 }
 
@@ -271,6 +272,40 @@ func (f *ForumHandler) ForumInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(models.GetStatusCodeGet(err))
+	w.Write(body)
+}
+
+func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Create Post")
+	slug := strings.TrimPrefix(r.URL.Path, "/api/thread/")
+	slug = strings.TrimSuffix(slug, "/create")
+	fmt.Println(slug)
+
+	var posts []models.Post
+	err := json.NewDecoder(r.Body).Decode(&posts)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	posts, err = f.ForumUseCase.CreatePosts(posts, slug)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodePost(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	body, err := json.Marshal(posts)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(models.GetStatusCodePost(err))
 	w.Write(body)
 }
 
