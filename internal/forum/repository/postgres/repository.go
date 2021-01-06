@@ -119,3 +119,25 @@ func (p *postgresForumRepository) UpdateUserInfo(user models.User) (models.User,
 
 	return user, nil
 }
+
+func (p *postgresForumRepository) SelectThreadBySlug(slug string) (models.Thread, error) {
+	var thread models.Thread
+	row := p.Conn.QueryRow(`Select id, title, author, forum, message, votes, slug, created from thread
+							Where slug=$1;`, slug)
+	err := row.Scan(&thread.Id, &thread.Title, &thread.Author, &thread.Forum, &thread.Message, &thread.Votes,
+					&thread.Slug, &thread.Created)
+	if err != nil {
+		return models.Thread{}, models.ErrNotFound
+	}
+	return thread, nil
+}
+
+func (p *postgresForumRepository) InsertThread(thread models.Thread) error {
+	_, err := p.Conn.Exec(	`Insert INTO thread(Title, Author, Forum, Message, slug, Votes)
+							VALUES ($1, $2, $3, $4, $5, $6);`, thread.Title, thread.Author, thread.Forum,
+							thread.Message, thread.Slug, thread.Votes)
+	if err != nil {
+		return err
+	}
+	return nil
+}

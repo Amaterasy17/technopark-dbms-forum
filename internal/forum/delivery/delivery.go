@@ -8,6 +8,7 @@ import (
 	"strings"
 	domain "technopark-dbms-forum/internal/forum"
 	"technopark-dbms-forum/models"
+	"time"
 )
 
 type ForumHandler struct {
@@ -43,6 +44,7 @@ func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 
 	forum, err = f.ForumUseCase.Forum(forum)
 	status := models.GetStatusCodePost(err)
@@ -84,6 +86,62 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	slug := strings.TrimPrefix(r.URL.Path, "/api/forum/")
 	slug = strings.TrimSuffix(slug, "/create")
 	fmt.Println(slug)
+
+	threadIn := models.ThreadIn{}
+	err := json.NewDecoder(r.Body).Decode(&threadIn)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	thread := models.Thread{
+		Id:      threadIn.Id,
+		Title:    threadIn.Title,
+		Author:   threadIn.Author,
+		Forum:    threadIn.Forum,
+		Message:  threadIn.Message,
+		Votes:   0,
+		Slug:     threadIn.Slug,
+		Created: time.Time{},
+	}
+	thread.Forum = slug
+	fmt.Println("has gone")
+
+	thread, err = f.ForumUseCase.CreatingThread(thread)
+ 	status := models.GetStatusCodePost(err)
+ 	if status == 409 {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodePost(err))
+
+		body, err := json.Marshal(thread)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(JSONError(err.Error()))
+			return
+		}
+
+		w.Write(body)
+		return
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	body, err := json.Marshal(thread)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(models.GetStatusCodePost(err))
+	w.Write(body)
 }
 
 func (f *ForumHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -215,3 +273,4 @@ func (f *ForumHandler) ForumInfo(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(models.GetStatusCodeGet(err))
 	w.Write(body)
 }
+

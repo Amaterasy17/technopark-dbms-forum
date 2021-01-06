@@ -84,3 +84,34 @@ func (f *ForumUsecase) ForumDetails(slug string) (models.Forum, error) {
 	}
 	return forum, nil
 }
+
+func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, error) {
+	_, err := f.forumRepo.SelectForum(thread.Forum)
+	if err != nil {
+		return models.Thread{}, err
+	}
+
+	_, err = f.forumRepo.SelectUser(thread.Author)
+	if err != nil {
+		return models.Thread{}, err
+	}
+
+	threadModel, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
+	if err == nil {
+		return threadModel, models.ErrConflict
+	}
+	fmt.Println("pered insertom")
+	err = f.forumRepo.InsertThread(thread)
+	if err != nil {
+		return models.Thread{}, err
+	}
+	fmt.Println("popal cuda")
+
+	result, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
+	if err != nil {
+		fmt.Println(err)
+		return models.Thread{}, err
+	}
+
+	return result, nil
+}

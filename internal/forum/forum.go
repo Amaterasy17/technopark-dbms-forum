@@ -10,6 +10,7 @@ type ForumUseCase interface {
 	GetUser(nickname string) (models.User, error)
 	ChangeUserProfile(user models.User) (models.User, error)
 	ForumDetails(slug string) (models.Forum, error)
+	CreatingThread(thread models.Thread) (models.Thread, error)
 }
 
 type ForumRepository interface {
@@ -21,4 +22,6 @@ type ForumRepository interface {
 	SelectUserByEmail(user models.User) (models.User, error)
 	UpdateUserInfo(user models.User) (models.User, error)
 	SelectForum(forumName string) (models.Forum, error)
+	SelectThreadBySlug(slug string) (models.Thread, error)
+	InsertThread(thread models.Thread) error
 }
