@@ -173,3 +173,33 @@ func (f *ForumUsecase) CreatePosts(posts []models.Post, slug string) ([]models.P
 
 	return postsCreated, nil
 }
+
+func (f *ForumUsecase) ThreadDetails(slug string) (models.Thread, error) {
+	id, err := strconv.Atoi(slug)
+	var thread models.Thread
+	if err != nil {
+		thread, err = f.forumRepo.SelectThreadBySlug(slug)
+		if err != nil {
+			return models.Thread{}, err
+		}
+	} else {
+		thread, err = f.forumRepo.SelectThreadById(id)
+		if err != nil {
+			return models.Thread{}, err
+		}
+	}
+
+	return thread, nil
+}
+
+func (f* ForumUsecase) ListThreads(slug string) ([]models.Thread, error) {
+	return nil, nil
+}
+
+func (f* ForumUsecase) StatusDB() models.Status {
+	return f.forumRepo.StatusOfForum()
+}
+
+func (f *ForumUsecase) ClearDB() error {
+	return f.forumRepo.ClearDB()
+}

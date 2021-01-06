@@ -34,6 +34,9 @@ func NewForumHandler(r *mux.Router, forumUseCase domain.ForumUseCase) {
 	r.HandleFunc("/api/user/{nickname}/profile", handler.ChangeProfileInformation).Methods(http.MethodPost)
 	r.HandleFunc("/api/forum/{slug}/details", handler.ForumInfo).Methods(http.MethodGet)
 	r.HandleFunc("/api/thread/{slug_or_id}/create", handler.CreatePost).Methods(http.MethodPost)
+	r.HandleFunc("/api/thread/{slug_or_id}/details", handler.ThreadDetails).Methods(http.MethodGet)
+	r.HandleFunc("/api/service/status", handler.StatusDB).Methods(http.MethodGet)
+	r.HandleFunc("/api/service/clear", handler.ClearDB).Methods(http.MethodPost)
 
 }
 
@@ -309,3 +312,54 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 }
 
+func (f *ForumHandler) ThreadDetails(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("thread details")
+	slug := strings.TrimPrefix(r.URL.Path, "/api/thread/")
+	slug = strings.TrimSuffix(slug, "/details")
+	fmt.Println(slug)
+
+	thread, err := f.ForumUseCase.ThreadDetails(slug)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	body, err := json.Marshal(thread)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(models.GetStatusCodeGet(err))
+	w.Write(body)
+}
+
+func (f *ForumHandler) StatusDB(w http.ResponseWriter, r *http.Request) {
+	status := f.ForumUseCase.StatusDB()
+	body, err := json.Marshal(status)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Write(body)
+}
+
+func (f *ForumHandler) ClearDB(w http.ResponseWriter, r *http.Request)  {
+	err := f.ForumUseCase.ClearDB()
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
+}

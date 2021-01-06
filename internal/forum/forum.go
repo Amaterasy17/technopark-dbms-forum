@@ -12,6 +12,9 @@ type ForumUseCase interface {
 	ForumDetails(slug string) (models.Forum, error)
 	CreatingThread(thread models.Thread) (models.Thread, error)
 	CreatePosts(posts []models.Post, slug string) ([]models.Post, error)
+	ThreadDetails(slug string) (models.Thread, error)
+	StatusDB() models.Status
+	ClearDB() error
 }
 
 type ForumRepository interface {
@@ -28,4 +31,6 @@ type ForumRepository interface {
 	SelectThreadById(id int) (models.Thread, error)
 	CheckParent(post models.Post) bool
 	InsertPost(post models.Post) (models.Post, error)
+	StatusOfForum() models.Status
+	ClearDB() error
 }

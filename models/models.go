@@ -52,3 +52,10 @@ type Post struct {
 	Parent   int       `json:"parent"`
 	Thread   int       `json:"thread,"`
 }
+
+type Status struct {
+	User   int `json:"user"`
+	Forum  int `json:"forum"`
+	Thread int `json:"thread"'`
+	Post   int `json:"post"`
+}
