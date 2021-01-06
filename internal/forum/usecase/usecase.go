@@ -76,3 +76,11 @@ func (f *ForumUsecase) ChangeUserProfile(user models.User) (models.User, error) 
 
 	return userModel, nil
 }
+
+func (f *ForumUsecase) ForumDetails(slug string) (models.Forum, error) {
+	forum, err := f.forumRepo.SelectForum(slug)
+	if err != nil {
+		return models.Forum{}, err
+	}
+	return forum, nil
+}

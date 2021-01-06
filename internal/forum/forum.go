@@ -9,6 +9,7 @@ type ForumUseCase interface {
 	CreateUser(user models.User) ([]models.User, error)
 	GetUser(nickname string) (models.User, error)
 	ChangeUserProfile(user models.User) (models.User, error)
+	ForumDetails(slug string) (models.Forum, error)
 }
 
 type ForumRepository interface {

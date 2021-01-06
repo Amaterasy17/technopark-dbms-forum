@@ -196,5 +196,22 @@ func (f *ForumHandler) ForumInfo(w http.ResponseWriter, r *http.Request) {
 	slug = strings.TrimSuffix(slug, "/details")
 	fmt.Println(slug)
 
-	//realize of finding forum details
+	forum, err := f.ForumUseCase.ForumDetails(slug)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	body, err := json.Marshal(forum)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(models.GetStatusCodeGet(err))
+	w.Write(body)
 }
