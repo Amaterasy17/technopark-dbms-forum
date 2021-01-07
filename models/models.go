@@ -59,3 +59,21 @@ type Status struct {
 	Thread int `json:"thread"'`
 	Post   int `json:"post"`
 }
+
+type Vote struct {
+	Nickname string `json:"nickname"`
+	Voice    int    `json:"voice"`
+	Thread   int    `json:"-"`
+}
+
+type PostUpdate struct {
+	ID       int       `json:"-"`
+	Message string `json:"message"`
+}
+
+type PostFull struct {
+	Author *User   `json:"author"`
+	Forum  *Forum  `json:"forum"`
+	Post   *Post   `json:"post"`
+	Thread *Thread `json:"thread"`
+}

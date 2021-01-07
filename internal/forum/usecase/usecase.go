@@ -203,3 +203,76 @@ func (f* ForumUsecase) StatusDB() models.Status {
 func (f *ForumUsecase) ClearDB() error {
 	return f.forumRepo.ClearDB()
 }
+
+func (f *ForumUsecase) MakeVote(vote models.Vote) (models.Vote, error) {
+	voteResult, err := f.forumRepo.SelectVote(vote)
+	if err != nil {
+		err = f.forumRepo.InsertVote(vote)
+		if err != nil {
+			return models.Vote{}, err
+		}
+		return vote, nil
+	}
+
+	if vote.Voice == voteResult.Voice {
+		return voteResult, nil
+	} else {
+		voteResult, err = f.forumRepo.UpdateVote(vote)
+		if err != nil {
+			return models.Vote{}, err
+		}
+		return voteResult, nil
+	}
+
+}
+
+func (f *ForumUsecase) SumVotesInThread(id int) int {
+	return f.forumRepo.SumVotesInThread(id)
+}
+
+func (f *ForumUsecase) UpdateMessagePost(update models.PostUpdate) (models.Post, error){
+	var post models.Post
+	post, err := f.forumRepo.SelectPost(update.ID)
+	if err != nil {
+		return models.Post{}, err
+	}
+
+
+	post, err = f.forumRepo.UpdatePost(post, update)
+	if err != nil {
+		return models.Post{}, err
+	}
+
+	return post, nil
+}
+
+
+func (f *ForumUsecase) PostFullDetails(id int) (models.PostFull, error) {
+	var postFull models.PostFull
+	post, err := f.forumRepo.SelectPost(id)
+	if err != nil {
+		return models.PostFull{}, err
+	}
+	postFull.Post = &post
+
+	author, err := f.forumRepo.SelectUser(post.Author)
+	if err != nil {
+		return models.PostFull{}, err
+	}
+
+	thread, err := f.forumRepo.SelectThreadById(post.Thread)
+	if err != nil {
+		return models.PostFull{}, err
+	}
+
+	forum, err := f.forumRepo.SelectForum(post.Forum)
+	if err != nil {
+		return models.PostFull{}, err
+	}
+
+	postFull.Author = &author
+	postFull.Thread = &thread
+	postFull.Forum = &forum
+
+	return postFull, nil
+}

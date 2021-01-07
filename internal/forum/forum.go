@@ -15,6 +15,10 @@ type ForumUseCase interface {
 	ThreadDetails(slug string) (models.Thread, error)
 	StatusDB() models.Status
 	ClearDB() error
+	MakeVote(vote models.Vote) (models.Vote, error)
+	SumVotesInThread(id int) int
+	UpdateMessagePost(update models.PostUpdate) (models.Post, error)
+	PostFullDetails(id int) (models.PostFull, error)
 }
 
 type ForumRepository interface {
@@ -33,4 +37,10 @@ type ForumRepository interface {
 	InsertPost(post models.Post) (models.Post, error)
 	StatusOfForum() models.Status
 	ClearDB() error
+	SelectVote(vote models.Vote) (models.Vote, error)
+	UpdateVote(vote models.Vote) (models.Vote, error)
+	InsertVote(vote models.Vote)  error
+	SumVotesInThread(id int) int
+	SelectPost(id int) (models.Post, error)
+	UpdatePost(post models.Post, postUpdate models.PostUpdate) (models.Post, error)
 }

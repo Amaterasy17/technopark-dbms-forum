@@ -199,5 +199,68 @@ func (p *postgresForumRepository) ClearDB() error {
 	_, err = p.Conn.Exec(`TRUNCATE forum CASCADE;`)
 	_, err = p.Conn.Exec(`TRUNCATE thread CASCADE;`)
 	_, err = p.Conn.Exec(`TRUNCATE post CASCADE;`)
+	_, err = p.Conn.Exec(`TRUNCATE votes CASCADE;`)
 	return err
+}
+
+func (p *postgresForumRepository) SelectVote(vote models.Vote) (models.Vote, error) {
+	var voteResult models.Vote
+	row := p.Conn.QueryRow(`Select author, voice, thread from votes Where author=$1 and thread=$2;`, vote.Nickname, vote.Thread)
+	err := row.Scan(&voteResult.Nickname, &voteResult.Voice, &voteResult.Thread)
+	if err != nil {
+		return models.Vote{}, models.ErrNotFound
+	}
+	return voteResult, nil
+}
+
+
+func (p *postgresForumRepository) UpdateVote(vote models.Vote) (models.Vote, error) {
+	_, err := p.Conn.Exec(`UPDATE votes SET voice=$1 WHERE nickname=$2;`, vote.Voice, vote.Nickname)
+	if err != nil {
+		return models.Vote{}, err
+	}
+	return vote, nil
+}
+
+func (p *postgresForumRepository) InsertVote(vote models.Vote)  error {
+	_, err := p.Conn.Exec(`INSERT INTO votes(author, voice, thread) VALUES ($1, $2, $3);`, vote.Nickname,
+							vote.Voice, vote.Thread)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *postgresForumRepository) SumVotesInThread(id int) int {
+	var sum int
+	row := p.Conn.QueryRow(`Select SUM(voice) from votes WHERE thread=$1;`, id)
+	err := row.Scan(&sum)
+	if err != nil {
+		return 0
+	}
+	return sum
+}
+
+func (p *postgresForumRepository) UpdatePost(post models.Post, postUpdate models.PostUpdate) (models.Post, error) {
+	if postUpdate.Message != "" && postUpdate.Message != post.Message {
+		row := p.Conn.QueryRow(`UPDATE post SET message=$1, isEdited=true WHERE id=$2 RETURNING *;`, postUpdate.Message, post.ID)
+		err := row.Scan(&post.ID, &post.Author, &post.Created, &post.Forum,  &post.IsEdited,
+			&post.Message, &post.Parent, &post.Thread)
+		if err != nil {
+			return post, err
+		}
+	}
+	return post, nil
+}
+
+
+func (p* postgresForumRepository) SelectPost(id int) (models.Post, error) {
+	var postModel models.Post
+	row := p.Conn.QueryRow(`Select id, author, created, forum, isEdited, message, parent, thread from post Where id=$1;`, id)
+	err := row.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
+		&postModel.Message, &postModel.Parent, &postModel.Thread)
+	if err != nil {
+		return models.Post{}, models.ErrNotFound
+	}
+	return postModel, nil
 }

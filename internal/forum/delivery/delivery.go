@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
+	"strconv"
 	"strings"
 	domain "technopark-dbms-forum/internal/forum"
 	"technopark-dbms-forum/models"
@@ -37,6 +38,9 @@ func NewForumHandler(r *mux.Router, forumUseCase domain.ForumUseCase) {
 	r.HandleFunc("/api/thread/{slug_or_id}/details", handler.ThreadDetails).Methods(http.MethodGet)
 	r.HandleFunc("/api/service/status", handler.StatusDB).Methods(http.MethodGet)
 	r.HandleFunc("/api/service/clear", handler.ClearDB).Methods(http.MethodPost)
+	r.HandleFunc("/api/thread/{slug_or_id}/vote", handler.MakeVote).Methods(http.MethodPost)
+	r.HandleFunc("/api/post/{id}/details", handler.PostUpdate).Methods(http.MethodPost)
+	r.HandleFunc("/api/post/{id}/details", handler.PostDetails).Methods(http.MethodGet)
 
 }
 
@@ -362,4 +366,124 @@ func (f *ForumHandler) ClearDB(w http.ResponseWriter, r *http.Request)  {
 	}
 
 	w.WriteHeader(200)
+}
+
+func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
+	fmt.Println("Voting")
+	slug := strings.TrimPrefix(r.URL.Path, "/api/thread/")
+	slug = strings.TrimSuffix(slug, "/vote")
+	fmt.Println(slug)
+
+	thread, err := f.ForumUseCase.ThreadDetails(slug)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	var vote models.Vote
+	err = json.NewDecoder(r.Body).Decode(&vote)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	vote.Thread = thread.Id
+
+	vote, err = f.ForumUseCase.MakeVote(vote)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	thread.Votes = f.ForumUseCase.SumVotesInThread(thread.Id)
+
+	body, err := json.Marshal(thread)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Write(body)
+}
+
+func (f *ForumHandler) PostUpdate(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("post update")
+	slug := strings.TrimPrefix(r.URL.Path, "/api/post/")
+	slug = strings.TrimSuffix(slug, "/details")
+	fmt.Println(slug)
+	id, err := strconv.Atoi(slug)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(400)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	var postUpdate models.PostUpdate
+	err = json.NewDecoder(r.Body).Decode(&postUpdate)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	postUpdate.ID = id
+
+	post, err := f.ForumUseCase.UpdateMessagePost(postUpdate)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	body, err := json.Marshal(post)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Write(body)
+}
+
+func (f *ForumHandler) PostDetails(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("post details")
+	slug := strings.TrimPrefix(r.URL.Path, "/api/post/")
+	slug = strings.TrimSuffix(slug, "/details")
+	fmt.Println(slug)
+	id, err := strconv.Atoi(slug)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(400)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	postFull, err := f.ForumUseCase.PostFullDetails(id)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+
+	body, err := json.Marshal(postFull)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Write(body)
 }
