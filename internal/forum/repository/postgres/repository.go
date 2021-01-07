@@ -254,7 +254,7 @@ func (p *postgresForumRepository) UpdatePost(post models.Post, postUpdate models
 }
 
 
-func (p* postgresForumRepository) SelectPost(id int) (models.Post, error) {
+func (p *postgresForumRepository) SelectPost(id int) (models.Post, error) {
 	var postModel models.Post
 	row := p.Conn.QueryRow(`Select id, author, created, forum, isEdited, message, parent, thread from post Where id=$1;`, id)
 	err := row.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
@@ -263,4 +263,45 @@ func (p* postgresForumRepository) SelectPost(id int) (models.Post, error) {
 		return models.Post{}, models.ErrNotFound
 	}
 	return postModel, nil
+}
+
+func (p *postgresForumRepository) SelectThreads(slug string, params models.Parameters) ([]models.Thread, error) {
+	var threads []models.Thread
+	var err error
+	var rows *pgx.Rows
+
+	if params.Since != "" {
+		if params.Desc {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, message, slug, title, votes FROM thread
+		WHERE forum=$1 AND created <= $2 ORDER BY created DESC LIMIT $3;`, slug, params.Since, params.Limit)
+		} else {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, message, slug, title, votes FROM thread
+		WHERE forum=$1 AND created >= $2 ORDER BY created ASC LIMIT $3;`, slug, params.Since, params.Limit)
+		}
+	} else {
+		if params.Desc {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, message, slug, title, votes FROM thread
+		WHERE forum=$1 ORDER BY created DESC LIMIT $2;`, slug, params.Limit)
+		} else {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, message, slug, title, votes FROM thread
+		WHERE forum=$1 ORDER BY created ASC LIMIT $2;`, slug, params.Limit)
+		}
+	}
+
+	if err != nil {
+		return threads, err
+	}
+	defer rows.Close()
+
+
+	for rows.Next() {
+		var thread models.Thread
+		err = rows.Scan(&thread.Id, &thread.Author, &thread.Created, &thread.Forum, &thread.Message,
+			&thread.Slug, &thread.Title, &thread.Votes)
+		if err != nil {
+			continue
+		}
+		threads = append(threads, thread)
+	}
+	return threads, nil
 }

@@ -77,3 +77,9 @@ type PostFull struct {
 	Post   *Post   `json:"post"`
 	Thread *Thread `json:"thread"`
 }
+
+type Parameters struct {
+	Limit int    `json:"limit"`
+	Since string `json:"since"`
+	Desc  bool   `json:"desc"`
+}

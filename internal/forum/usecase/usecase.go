@@ -192,8 +192,20 @@ func (f *ForumUsecase) ThreadDetails(slug string) (models.Thread, error) {
 	return thread, nil
 }
 
-func (f* ForumUsecase) ListThreads(slug string) ([]models.Thread, error) {
-	return nil, nil
+func (f* ForumUsecase) ListThreads(slug string, params models.Parameters) ([]models.Thread, error) {
+
+	_, err := f.forumRepo.SelectForum(slug)
+	if err != nil {
+		return nil, err
+	}
+
+	threads, err := f.forumRepo.SelectThreads(slug, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return threads, nil
+
 }
 
 func (f* ForumUsecase) StatusDB() models.Status {
@@ -276,3 +288,4 @@ func (f *ForumUsecase) PostFullDetails(id int) (models.PostFull, error) {
 
 	return postFull, nil
 }
+
