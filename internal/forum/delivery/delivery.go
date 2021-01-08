@@ -55,6 +55,7 @@ func NewForumHandler(r *mux.Router, forumUseCase domain.ForumUseCase) {
 }
 
 func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	forum := models.Forum{}
 	err := json.NewDecoder(r.Body).Decode(&forum)
 	if err != nil {
@@ -101,6 +102,7 @@ func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	slug := strings.TrimPrefix(r.URL.Path, "/api/forum/")
 	slug = strings.TrimSuffix(slug, "/create")
 	fmt.Println(slug)
@@ -163,6 +165,7 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("Create user")
 	nickname := strings.TrimPrefix(r.URL.Path, "/api/user/")
 	nickname = strings.TrimSuffix(nickname, "/create")
@@ -205,6 +208,7 @@ func (f *ForumHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) ProfileUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("get profile user")
 	nickname := strings.TrimPrefix(r.URL.Path, "/api/user/")
 	nickname = strings.TrimSuffix(nickname, "/profile")
@@ -231,6 +235,7 @@ func (f *ForumHandler) ProfileUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) ChangeProfileInformation(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("change profile user")
 	nickname := strings.TrimPrefix(r.URL.Path, "/api/user/")
 	nickname = strings.TrimSuffix(nickname, "/profile")
@@ -267,6 +272,7 @@ func (f *ForumHandler) ChangeProfileInformation(w http.ResponseWriter, r *http.R
 }
 
 func (f *ForumHandler) ForumInfo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("forumInfo")
 	slug := strings.TrimPrefix(r.URL.Path, "/api/forum/")
 	slug = strings.TrimSuffix(slug, "/details")
@@ -293,6 +299,7 @@ func (f *ForumHandler) ForumInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("Create Post")
 	slug := strings.TrimPrefix(r.URL.Path, "/api/thread/")
 	slug = strings.TrimSuffix(slug, "/create")
@@ -327,6 +334,7 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) ThreadDetails(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("thread details")
 	slug := strings.TrimPrefix(r.URL.Path, "/api/thread/")
 	slug = strings.TrimSuffix(slug, "/details")
@@ -353,6 +361,7 @@ func (f *ForumHandler) ThreadDetails(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) StatusDB(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	status := f.ForumUseCase.StatusDB()
 	body, err := json.Marshal(status)
 	if err != nil {
@@ -367,6 +376,7 @@ func (f *ForumHandler) StatusDB(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) ClearDB(w http.ResponseWriter, r *http.Request)  {
+	w.Header().Set("Content-Type", "application/json")
 	err := f.ForumUseCase.ClearDB()
 	if err != nil {
 		fmt.Println(err)
@@ -379,6 +389,7 @@ func (f *ForumHandler) ClearDB(w http.ResponseWriter, r *http.Request)  {
 }
 
 func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("Voting")
 	slug := strings.TrimPrefix(r.URL.Path, "/api/thread/")
 	slug = strings.TrimSuffix(slug, "/vote")
@@ -424,6 +435,7 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 }
 
 func (f *ForumHandler) PostUpdate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("post update")
 	slug := strings.TrimPrefix(r.URL.Path, "/api/post/")
 	slug = strings.TrimSuffix(slug, "/details")
@@ -465,6 +477,7 @@ func (f *ForumHandler) PostUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) PostDetails(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("post details")
 	slug := strings.TrimPrefix(r.URL.Path, "/api/post/")
 	slug = strings.TrimSuffix(slug, "/details")
@@ -641,6 +654,7 @@ func (f *ForumHandler) PostsOfThread(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) UpdateThread(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	slugOrId := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/thread/"), "/details")
 
 	var thread models.Thread

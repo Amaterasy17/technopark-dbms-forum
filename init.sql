@@ -88,7 +88,7 @@ DECLARE
     parentPath         BIGINT[];
     first_parent_thread INT;
 BEGIN
-    IF (NEW.parent IS 0) THEN
+    IF (NEW.parent IS NULL) THEN
         NEW.path := array_append(new.path, new.id);
     ELSE
         SELECT path FROM post WHERE id = new.parent INTO parentPath;
