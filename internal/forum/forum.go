@@ -18,8 +18,9 @@ type ForumUseCase interface {
 	MakeVote(vote models.Vote) (models.Vote, error)
 	SumVotesInThread(id int) int
 	UpdateMessagePost(update models.PostUpdate) (models.Post, error)
-	PostFullDetails(id int) (models.PostFull, error)
+	PostFullDetails(id int, related string) (models.PostFull, error)
 	ListThreads(slug string, params models.Parameters) ([]models.Thread, error)
+	GetUsersByForum(slug string, params models.Parameters) ([]models.User, error)
 }
 
 type ForumRepository interface {
@@ -45,4 +46,5 @@ type ForumRepository interface {
 	SelectPost(id int) (models.Post, error)
 	UpdatePost(post models.Post, postUpdate models.PostUpdate) (models.Post, error)
 	SelectThreads(slug string, params models.Parameters) ([]models.Thread, error)
+	SelectUsersByForum(slug string, params models.Parameters) ([]models.User, error)
 }

@@ -30,18 +30,26 @@ func NewForumHandler(r *mux.Router, forumUseCase domain.ForumUseCase) {
 
 	r.HandleFunc("/api/forum/create", handler.Forum).Methods(http.MethodPost)
 	r.HandleFunc("/api/forum/{slug}/create", handler.CreateThread).Methods(http.MethodPost)
+	r.HandleFunc("/api/forum/{slug}/details", handler.ForumInfo).Methods(http.MethodGet)
+
 	r.HandleFunc("/api/user/{nickname}/create", handler.CreateUser).Methods(http.MethodPost)
 	r.HandleFunc("/api/user/{nickname}/profile", handler.ProfileUser).Methods(http.MethodGet)
 	r.HandleFunc("/api/user/{nickname}/profile", handler.ChangeProfileInformation).Methods(http.MethodPost)
-	r.HandleFunc("/api/forum/{slug}/details", handler.ForumInfo).Methods(http.MethodGet)
+
+
 	r.HandleFunc("/api/thread/{slug_or_id}/create", handler.CreatePost).Methods(http.MethodPost)
 	r.HandleFunc("/api/thread/{slug_or_id}/details", handler.ThreadDetails).Methods(http.MethodGet)
+
 	r.HandleFunc("/api/service/status", handler.StatusDB).Methods(http.MethodGet)
 	r.HandleFunc("/api/service/clear", handler.ClearDB).Methods(http.MethodPost)
+
 	r.HandleFunc("/api/thread/{slug_or_id}/vote", handler.MakeVote).Methods(http.MethodPost)
+
 	r.HandleFunc("/api/post/{id}/details", handler.PostUpdate).Methods(http.MethodPost)
 	r.HandleFunc("/api/post/{id}/details", handler.PostDetails).Methods(http.MethodGet)
+
 	r.HandleFunc("/api/forum/{slug}/threads", handler.ThreadsOfForum).Methods(http.MethodGet)
+	r.HandleFunc("/api/forum/{slug}/users", handler.UsersOfForum).Methods(http.MethodGet)
 }
 
 func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
@@ -467,7 +475,9 @@ func (f *ForumHandler) PostDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postFull, err := f.ForumUseCase.PostFullDetails(id)
+	related := r.URL.Query().Get("related")
+
+	postFull, err := f.ForumUseCase.PostFullDetails(id, related)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(models.GetStatusCodeGet(err))
@@ -521,6 +531,49 @@ func (f *ForumHandler) ThreadsOfForum(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body, err := json.Marshal(threads)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Write(body)
+}
+
+func (f *ForumHandler) UsersOfForum(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("users of forum")
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var params models.Parameters
+	var err error
+	params.Limit, err = strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		params.Limit = 100
+	}
+
+	params.Since = r.URL.Query().Get("since")
+
+	params.Desc, err = strconv.ParseBool(r.URL.Query().Get("desc"))
+	if err != nil {
+		params.Desc = false
+	}
+
+	slug := strings.TrimPrefix(r.URL.Path, "/api/forum/")
+	slug = strings.TrimSuffix(slug, "/users")
+	fmt.Println(slug)
+
+	users, err := f.ForumUseCase.GetUsersByForum(slug, params)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	body, err := json.Marshal(users)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

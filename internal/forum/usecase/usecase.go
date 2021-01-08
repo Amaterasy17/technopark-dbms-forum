@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"strconv"
+	"strings"
 	domain "technopark-dbms-forum/internal/forum"
 	"technopark-dbms-forum/models"
 	"time"
@@ -259,7 +260,7 @@ func (f *ForumUsecase) UpdateMessagePost(update models.PostUpdate) (models.Post,
 }
 
 
-func (f *ForumUsecase) PostFullDetails(id int) (models.PostFull, error) {
+func (f *ForumUsecase) PostFullDetails(id int, related string) (models.PostFull, error) {
 	var postFull models.PostFull
 	post, err := f.forumRepo.SelectPost(id)
 	if err != nil {
@@ -267,25 +268,44 @@ func (f *ForumUsecase) PostFullDetails(id int) (models.PostFull, error) {
 	}
 	postFull.Post = &post
 
-	author, err := f.forumRepo.SelectUser(post.Author)
-	if err != nil {
-		return models.PostFull{}, err
+	if strings.Contains(related, "user") {
+		author, err := f.forumRepo.SelectUser(post.Author)
+		if err != nil {
+			return models.PostFull{}, err
+		}
+		postFull.Author = &author
 	}
 
-	thread, err := f.forumRepo.SelectThreadById(post.Thread)
-	if err != nil {
-		return models.PostFull{}, err
+	if strings.Contains(related, "thread") {
+		thread, err := f.forumRepo.SelectThreadById(post.Thread)
+		if err != nil {
+			return models.PostFull{}, err
+		}
+		postFull.Thread = &thread
 	}
 
-	forum, err := f.forumRepo.SelectForum(post.Forum)
-	if err != nil {
-		return models.PostFull{}, err
+	if strings.Contains(related, "forum") {
+		forum, err := f.forumRepo.SelectForum(post.Forum)
+		if err != nil {
+			return models.PostFull{}, err
+		}
+		postFull.Forum = &forum
 	}
-
-	postFull.Author = &author
-	postFull.Thread = &thread
-	postFull.Forum = &forum
 
 	return postFull, nil
 }
 
+
+func (f *ForumUsecase) GetUsersByForum(slug string, params models.Parameters) ([]models.User, error) {
+	_, err := f.forumRepo.SelectForum(slug)
+	if err != nil {
+		return nil, err
+	}
+
+	users, err := f.forumRepo.SelectUsersByForum(slug, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}

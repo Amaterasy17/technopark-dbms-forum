@@ -305,3 +305,63 @@ func (p *postgresForumRepository) SelectThreads(slug string, params models.Param
 	}
 	return threads, nil
 }
+
+func (p *postgresForumRepository) SelectUsersByForum(slug string, params models.Parameters) ([]models.User, error) {
+	var err error
+	var rows *pgx.Rows
+	var users []models.User
+
+	if params.Since != "" {
+		if params.Desc {
+			rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
+										(SELECT author from thread where forum=$1
+										 UNION
+										 Select author from post where forum=$1) as authors
+										 INNER JOIN users on (authors.author=users.nickname)
+										 Where LOWER(author) < LOWER($2)
+										Order By LOWER(authors.author) DESC LIMIT NULLIF($3, 0)`, slug, params.Since,
+										  params.Limit)
+		} else {
+			rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
+										(SELECT author from thread where forum=$1
+										 UNION
+										 Select author from post where forum=$1) as authors
+										 INNER JOIN users on (authors.author=users.nickname)
+										 Where LOWER(author) < LOWER($2)
+										Order By LOWER(authors.author) ASC LIMIT NULLIF($3, 0)`, slug, params.Since,
+										params.Limit)
+		}
+	} else {
+		if params.Desc {
+			rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
+										(SELECT author from thread where forum=$1
+										 UNION
+										 Select author from post where forum=$1) as authors
+										 INNER JOIN users on (authors.author=users.nickname)
+										Order By LOWER(authors.author) DESC LIMIT NULLIF($2, 0)`, slug, params.Limit)
+		} else {
+			rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
+										(SELECT author from thread where forum=$1
+										 UNION
+										 Select author from post where forum=$1) as authors
+										 INNER JOIN users on (authors.author=users.nickname)
+										Order By LOWER(authors.author) ASC LIMIT NULLIF($2, 0)`, slug, params.Limit)
+		}
+	}
+
+	if err != nil {
+		return users, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user models.User
+		err = rows.Scan(&user.Nickname, &user.FullName, &user.About, &user.Email)
+		if err != nil {
+			return users, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}

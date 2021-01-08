@@ -36,9 +36,10 @@ CREATE UNLOGGED TABLE post
     Created  timestamp with time zone default now(),
     Forum    citext,
     isEdited BOOLEAN                  DEFAULT FALSE,
-    Message  text   NOT NULL,
+    Message  text NOT NULL,
     Parent   BIGINT                   DEFAULT 0,
     Thread   INT,
+    Path     BIGINT[]                 DEFAULT ARRAY []::INTEGER[],
     FOREIGN KEY (forum) REFERENCES "forum" (slug),
     FOREIGN KEY (thread) REFERENCES "thread" (id)
 --     FOREIGN KEY (parent) REFERENCES "post" (id)
