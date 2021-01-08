@@ -322,3 +322,7 @@ func (f *ForumUsecase) GetPostsOfThread(threadId int, parameters models.Paramete
 		return nil, models.ErrBadRequest
 	}
 }
+
+func (f *ForumUsecase) UpdateThread(thread models.Thread) (models.Thread, error) {
+	return f.forumRepo.UpdateThread(thread)
+}

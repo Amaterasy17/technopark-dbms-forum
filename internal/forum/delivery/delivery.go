@@ -40,6 +40,7 @@ func NewForumHandler(r *mux.Router, forumUseCase domain.ForumUseCase) {
 	r.HandleFunc("/api/thread/{slug_or_id}/create", handler.CreatePost).Methods(http.MethodPost)
 	r.HandleFunc("/api/thread/{slug_or_id}/details", handler.ThreadDetails).Methods(http.MethodGet)
 	r.HandleFunc("/api/thread/{slug_or_id}/posts", handler.PostsOfThread).Methods(http.MethodGet)
+	r.HandleFunc("/api/thread/{slug_or_id}/details", handler.UpdateThread).Methods(http.MethodPost)
 
 	r.HandleFunc("/api/service/status", handler.StatusDB).Methods(http.MethodGet)
 	r.HandleFunc("/api/service/clear", handler.ClearDB).Methods(http.MethodPost)
@@ -636,5 +637,44 @@ func (f *ForumHandler) PostsOfThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
+	w.Write(body)
+}
+
+func (f *ForumHandler) UpdateThread(w http.ResponseWriter, r *http.Request) {
+	slugOrId := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/thread/"), "/details")
+
+	var thread models.Thread
+	err := json.NewDecoder(r.Body).Decode(&thread)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	id, err := strconv.Atoi(slugOrId)
+	if err != nil {
+		thread.Slug = slugOrId
+	} else {
+		thread.Id = id
+	}
+
+	thread, err = f.ForumUseCase.UpdateThread(thread)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	body, err := json.Marshal(thread)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 	w.Write(body)
 }
