@@ -51,6 +51,7 @@ type Post struct {
 	Message  string    `json:"message"`
 	Parent   int       `json:"parent"`
 	Thread   int       `json:"thread,"`
+	Path     string    `json:"-"`
 }
 
 type Status struct {

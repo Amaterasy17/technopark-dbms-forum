@@ -168,7 +168,7 @@ func (p *postgresForumRepository) InsertPost(post models.Post) (models.Post, err
 		post.Author, post.Created, post.Forum, post.Message, post.Parent, post.Thread)
 	var postModel models.Post
 	err := row.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
-		&postModel.Message, &postModel.Parent, &postModel.Thread)
+		&postModel.Message, &postModel.Parent, &postModel.Thread, &postModel.Path)
 	return postModel, err
 }
 
