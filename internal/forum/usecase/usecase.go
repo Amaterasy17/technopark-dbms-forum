@@ -309,3 +309,16 @@ func (f *ForumUsecase) GetUsersByForum(slug string, params models.Parameters) ([
 
 	return users, nil
 }
+
+func (f *ForumUsecase) GetPostsOfThread(threadId int, parameters models.Parameters, sort string) ([]models.Post, error) {
+	switch sort {
+	case "flat":
+		return f.forumRepo.PostFlatSort(threadId, parameters)
+	case "tree":
+		return f.forumRepo.PostTreeSort(threadId, parameters)
+	case "parent_tree":
+		return f.forumRepo.PostParentTreeSort(threadId, parameters)
+	default:
+		return nil, models.ErrBadRequest
+	}
+}

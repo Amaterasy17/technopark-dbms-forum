@@ -365,3 +365,135 @@ func (p *postgresForumRepository) SelectUsersByForum(slug string, params models.
 
 	return users, nil
 }
+
+
+func (p *postgresForumRepository) PostFlatSort(id int, parameters models.Parameters) ([]models.Post, error) {
+	var err error
+	var rows *pgx.Rows
+	var posts []models.Post
+
+	if parameters.Since == "" {
+		if parameters.Desc {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+		WHERE thread=$1 ORDER BY created DESC, id DESC LIMIT $2;`, id, parameters.Limit)
+		} else {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+		WHERE thread=$1 ORDER BY created ASC, id ASC LIMIT $2;`, id, parameters.Limit)
+		}
+	} else {
+		if parameters.Desc {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+		WHERE thread=$1 AND id < $2 ORDER BY created DESC, id DESC LIMIT $3;`, id, parameters.Since, parameters.Limit)
+		} else {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+		WHERE thread=$1 AND id > $2 ORDER BY created DESC, id DESC LIMIT $3;`, id, parameters.Since, parameters.Limit)
+		}
+	}
+
+	if err != nil {
+		return posts, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var post models.Post
+		err = rows.Scan(&post.ID, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Message, &post.Parent, &post.Thread)
+		if err != nil {
+			return posts, err
+		}
+
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func (p *postgresForumRepository) PostTreeSort(threadId int, parameters models.Parameters) ([]models.Post, error) {
+	var err error
+	var rows *pgx.Rows
+	var posts []models.Post
+
+	if parameters.Since == "" {
+		if parameters.Desc {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+		WHERE thread=$1 ORDER BY path DESC, id  DESC LIMIT $2;`, threadId, parameters.Limit)
+		} else {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+		WHERE thread=$1 ORDER BY path ASC, id  ASC LIMIT $2;`, threadId, parameters.Limit)
+		}
+	} else {
+		if parameters.Desc {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+		WHERE thread=$1 AND PATH < (SELECT path FROM post WHERE id = $2)
+		ORDER BY path DESC, id  DESC LIMIT $3;`, threadId, parameters.Since, parameters.Limit)
+		} else {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+		WHERE thread=$1 AND PATH > (SELECT path FROM post WHERE id = $2)
+		ORDER BY path ASC, id  ASC LIMIT $3;`, threadId, parameters.Since, parameters.Limit)
+		}
+	}
+
+	if err != nil {
+		return posts, err
+	}
+	defer rows.Close()
+
+
+	for rows.Next() {
+		var post models.Post
+		err = rows.Scan(&post.ID, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Message, &post.Parent, &post.Thread)
+		if err != nil {
+			return posts, err
+		}
+
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func (p *postgresForumRepository) PostParentTreeSort(threadId int, parameters models.Parameters) ([]models.Post, error) {
+	var err error
+	var rows *pgx.Rows
+	var posts []models.Post
+
+	if parameters.Since == "" {
+		if parameters.Desc {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+			WHERE path[1] IN (SELECT id FROM post WHERE thread = $1 AND parent IS NULL ORDER BY id DESC LIMIT $2)
+			ORDER BY path[1] DESC, path, id;`, threadId, parameters.Limit)
+		} else {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+			WHERE path[1] IN (SELECT id FROM post WHERE thread = $1 AND parent IS NULL ORDER BY id LIMIT $2)
+			ORDER BY path, id;`, threadId, parameters.Limit)
+		}
+	} else {
+		if parameters.Desc {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+				WHERE path[1] IN (SELECT id FROM post WHERE thread = $1 AND parent IS NULL AND PATH[1] <
+				(SELECT path[1] FROM post WHERE id = $2) ORDER BY id DESC LIMIT $3) ORDER BY path[1] DESC, path, id;`,
+				threadId, parameters.Since, parameters.Limit)
+		} else {
+			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
+				WHERE path[1] IN (SELECT id FROM post WHERE thread = $1 AND parent IS NULL AND PATH[1] >
+				(SELECT path[1] FROM post WHERE id = $2) ORDER BY id ASC LIMIT $3) ORDER BY path, id;`,
+				threadId, parameters.Since, parameters.Limit)
+		}
+	}
+
+	if err != nil {
+		return posts, err
+	}
+	defer rows.Close()
+
+
+	for rows.Next() {
+		var post models.Post
+		err = rows.Scan(&post.ID, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Message,
+			&post.Parent, &post.Thread)
+		if err != nil {
+			return posts, err
+		}
+
+		posts = append(posts, post)
+	}
+	return posts, nil
+}

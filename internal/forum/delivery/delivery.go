@@ -39,6 +39,7 @@ func NewForumHandler(r *mux.Router, forumUseCase domain.ForumUseCase) {
 
 	r.HandleFunc("/api/thread/{slug_or_id}/create", handler.CreatePost).Methods(http.MethodPost)
 	r.HandleFunc("/api/thread/{slug_or_id}/details", handler.ThreadDetails).Methods(http.MethodGet)
+	r.HandleFunc("/api/thread/{slug_or_id}/posts", handler.PostsOfThread).Methods(http.MethodGet)
 
 	r.HandleFunc("/api/service/status", handler.StatusDB).Methods(http.MethodGet)
 	r.HandleFunc("/api/service/clear", handler.ClearDB).Methods(http.MethodPost)
@@ -574,6 +575,59 @@ func (f *ForumHandler) UsersOfForum(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body, err := json.Marshal(users)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Write(body)
+}
+
+
+func (f *ForumHandler) PostsOfThread(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("posts of forum")
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var params models.Parameters
+	var err error
+	params.Limit, err = strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		params.Limit = 100
+	}
+
+	params.Since = r.URL.Query().Get("since")
+	sort := r.URL.Query().Get("sort")
+
+	params.Desc, err = strconv.ParseBool(r.URL.Query().Get("desc"))
+	if err != nil {
+		params.Desc = false
+	}
+
+	slug := strings.TrimPrefix(r.URL.Path, "/api/thread/")
+	slug = strings.TrimSuffix(slug, "/posts")
+	fmt.Println(slug)
+
+	thread, err := f.ForumUseCase.ThreadDetails(slug)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	posts, err := f.ForumUseCase.GetPostsOfThread(thread.Id, params, sort)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	body, err := json.Marshal(posts)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

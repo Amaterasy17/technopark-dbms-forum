@@ -21,6 +21,7 @@ type ForumUseCase interface {
 	PostFullDetails(id int, related string) (models.PostFull, error)
 	ListThreads(slug string, params models.Parameters) ([]models.Thread, error)
 	GetUsersByForum(slug string, params models.Parameters) ([]models.User, error)
+	GetPostsOfThread(threadId int, parameters models.Parameters, sort string) ([]models.Post, error)
 }
 
 type ForumRepository interface {
@@ -47,4 +48,7 @@ type ForumRepository interface {
 	UpdatePost(post models.Post, postUpdate models.PostUpdate) (models.Post, error)
 	SelectThreads(slug string, params models.Parameters) ([]models.Thread, error)
 	SelectUsersByForum(slug string, params models.Parameters) ([]models.User, error)
+	PostParentTreeSort(threadId int, parameters models.Parameters) ([]models.Post, error)
+	PostTreeSort(threadId int, parameters models.Parameters) ([]models.Post, error)
+	PostFlatSort(id int, parameters models.Parameters) ([]models.Post, error)
 }
