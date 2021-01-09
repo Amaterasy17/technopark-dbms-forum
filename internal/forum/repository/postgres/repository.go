@@ -242,7 +242,7 @@ func (p *postgresForumRepository) SelectVote(vote models.Vote) (models.Vote, err
 
 
 func (p *postgresForumRepository) UpdateVote(vote models.Vote) (models.Vote, error) {
-	_, err := p.Conn.Exec(`UPDATE votes SET voice=$1 WHERE nickname=$2;`, vote.Voice, vote.Nickname)
+	_, err := p.Conn.Exec(`UPDATE votes SET voice=$1 WHERE author=$2 and thread=$3;`, vote.Voice, vote.Nickname, vote.Thread)
 	if err != nil {
 		return models.Vote{}, err
 	}
@@ -405,7 +405,7 @@ func (p *postgresForumRepository) PostFlatSort(id int, parameters models.Paramet
 		WHERE thread=$1 ORDER BY created DESC, id DESC LIMIT $2;`, id, parameters.Limit)
 		} else {
 			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
-		WHERE thread=$1 ORDER BY created ASC, id ASC LIMIT $2;`, id, parameters.Limit)
+		WHERE thread=$1 ORDER BY created, id LIMIT $2;`, id, parameters.Limit)
 		}
 	} else {
 		if parameters.Desc {
@@ -413,7 +413,7 @@ func (p *postgresForumRepository) PostFlatSort(id int, parameters models.Paramet
 		WHERE thread=$1 AND id < $2 ORDER BY created DESC, id DESC LIMIT $3;`, id, parameters.Since, parameters.Limit)
 		} else {
 			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
-		WHERE thread=$1 AND id > $2 ORDER BY created DESC, id DESC LIMIT $3;`, id, parameters.Since, parameters.Limit)
+		WHERE thread=$1 AND id > $2 ORDER BY created, id LIMIT $3;`, id, parameters.Since, parameters.Limit)
 		}
 	}
 

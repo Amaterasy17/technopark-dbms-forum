@@ -3,6 +3,7 @@ package usecase
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx"
 	"strconv"
 	"strings"
 	domain "technopark-dbms-forum/internal/forum"
@@ -230,6 +231,9 @@ func (f *ForumUsecase) MakeVote(vote models.Vote) (models.Vote, error) {
 	if err != nil {
 		err = f.forumRepo.InsertVote(vote)
 		if err != nil {
+			if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23503" {
+				return models.Vote{}, models.ErrNotFound
+			}
 			return models.Vote{}, err
 		}
 		return vote, nil
@@ -327,10 +331,31 @@ func (f *ForumUsecase) GetPostsOfThread(threadId int, parameters models.Paramete
 	case "parent_tree":
 		return f.forumRepo.PostParentTreeSort(threadId, parameters)
 	default:
-		return nil, models.ErrBadRequest
+		return f.forumRepo.PostFlatSort(threadId, parameters)
 	}
 }
 
 func (f *ForumUsecase) UpdateThread(thread models.Thread) (models.Thread, error) {
+	var oldThread models.Thread
+	var err error
+	if thread.Slug == "" {
+		oldThread, err = f.forumRepo.SelectThreadById(thread.Id)
+		if err != nil {
+			return models.Thread{}, err
+		}
+	} else {
+		oldThread, err = f.forumRepo.SelectThreadBySlug(thread.Slug)
+		if err != nil {
+			return models.Thread{}, err
+		}
+	}
+
+	if thread.Title == "" {
+		thread.Title = oldThread.Title
+	}
+	if thread.Message == "" {
+		thread.Message = oldThread.Message
+	}
+
 	return f.forumRepo.UpdateThread(thread)
 }
