@@ -498,7 +498,8 @@ func (f *ForumHandler) PostUpdate(w http.ResponseWriter, r *http.Request) {
 	post, err := f.ForumUseCase.UpdateMessagePost(postUpdate)
 	if err != nil {
 		fmt.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(models.GetStatusCodePost(err))
+		w.Write(JSONError(err.Error()))
 		return
 	}
 

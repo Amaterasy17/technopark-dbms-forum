@@ -175,7 +175,7 @@ func (f *ForumUsecase) CreatePosts(posts []models.Post, slug string) ([]models.P
 		post, err = f.forumRepo.InsertPost(post)
 		if err != nil {
 			fmt.Println(err)
-			return nil, err
+			return nil, models.ErrConflict
 		}
 
 		postsCreated = append(postsCreated, post)

@@ -178,9 +178,11 @@ func (p *postgresForumRepository) SelectThreadById(id int) (models.Thread, error
 func (p *postgresForumRepository) CheckParent(post models.Post) bool {
 	fmt.Printf("menya vizvali")
 	fmt.Println(post.Parent)
-	var id int
-	row := p.Conn.QueryRow(`Select id from post where id=$1;`, post.Parent.Int64)
+	var id string
+	row := p.Conn.QueryRow(`Select author from post where id=$1;`, post.Parent.Int64)
+	fmt.Println("Ебанный рот я перед сканом")
 	err := row.Scan(&id)
+	fmt.Println("Ебанный рот я после скана сканом")
 	if err == pgx.ErrNoRows {
 		fmt.Printf("FALSE FLASE FALSE")
 		return false
@@ -280,7 +282,7 @@ func (p *postgresForumRepository) UpdatePost(post models.Post, postUpdate models
 	if postUpdate.Message != "" && postUpdate.Message != post.Message {
 		row := p.Conn.QueryRow(`UPDATE post SET message=$1, isEdited=true WHERE id=$2 RETURNING *;`, postUpdate.Message, post.ID)
 		err := row.Scan(&post.ID, &post.Author, &post.Created, &post.Forum,  &post.IsEdited,
-			&post.Message, &post.Parent, &post.Thread)
+			&post.Message, &post.Parent, &post.Thread, &post.Path)
 		if err != nil {
 			return post, err
 		}
