@@ -697,7 +697,12 @@ func (f *ForumHandler) PostsOfThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(body)
+	if len(posts) != 0 {
+		w.Write(body)
+	} else {
+		w.Write([]byte("[]"))
+	}
+
 }
 
 func (f *ForumHandler) UpdateThread(w http.ResponseWriter, r *http.Request) {

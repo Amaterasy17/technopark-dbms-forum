@@ -176,10 +176,18 @@ func (p *postgresForumRepository) SelectThreadById(id int) (models.Thread, error
 }
 
 func (p *postgresForumRepository) CheckParent(post models.Post) bool {
+	fmt.Printf("menya vizvali")
+	fmt.Println(post.Parent)
 	var id int
-	row := p.Conn.QueryRow(`Select id from post where id=$1;`, post.Parent)
+	row := p.Conn.QueryRow(`Select id from post where id=$1;`, post.Parent.Int64)
 	err := row.Scan(&id)
+	if err == pgx.ErrNoRows {
+		fmt.Printf("FALSE FLASE FALSE")
+		return false
+	}
+	fmt.Println(id)
 	if err != nil {
+		fmt.Printf("FALSE FLASE FALSE")
 		return false
 	}
 	return true
