@@ -9,7 +9,6 @@ import (
 	"strings"
 	domain "technopark-dbms-forum/internal/forum"
 	"technopark-dbms-forum/models"
-	"time"
 )
 
 type ForumHandler struct {
@@ -107,24 +106,33 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	slug = strings.TrimSuffix(slug, "/create")
 	fmt.Println(slug)
 
-	threadIn := models.ThreadIn{}
-	err := json.NewDecoder(r.Body).Decode(&threadIn)
+	//threadIn := models.ThreadIn{}
+	//err := json.NewDecoder(r.Body).Decode(&threadIn)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
+	//thread := models.Thread{
+	//	Id:      threadIn.Id,
+	//	Title:    threadIn.Title,
+	//	Author:   threadIn.Author,
+	//	Forum:    threadIn.Forum,
+	//	Message:  threadIn.Message,
+	//	Votes:   0,
+	//	Slug:     threadIn.Slug,
+	//	Created: time.Time{},
+	//}
+
+	var thread models.Thread
+	err := json.NewDecoder(r.Body).Decode(&thread)
 	if err != nil {
 		fmt.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	thread := models.Thread{
-		Id:      threadIn.Id,
-		Title:    threadIn.Title,
-		Author:   threadIn.Author,
-		Forum:    threadIn.Forum,
-		Message:  threadIn.Message,
-		Votes:   0,
-		Slug:     threadIn.Slug,
-		Created: time.Time{},
-	}
 	thread.Forum = slug
+
 	fmt.Println("has gone")
 
 	thread, err = f.ForumUseCase.CreatingThread(thread)

@@ -102,19 +102,27 @@ func (p *postgresForumRepository) SelectUserByEmail(user models.User) (models.Us
 }
 
 func (p *postgresForumRepository) UpdateUserInfo(user models.User) (models.User, error) {
-	_, err := p.Conn.Exec(`UPDATE users SET fullname=$1 WHERE nickname=$2;`, user.FullName, user.Nickname)
-	if err != nil {
-		return models.User{}, err
+	var err error
+	if user.FullName != "" {
+		_, err = p.Conn.Exec(`UPDATE users SET fullname=$1 WHERE nickname=$2;`, user.FullName, user.Nickname)
+		if err != nil {
+			return models.User{}, err
+		}
 	}
 
-	_, err = p.Conn.Exec(`UPDATE users SET about=$1 WHERE nickname=$2;`, user.About, user.Nickname)
-	if err != nil {
-		return models.User{}, err
+	if user.About != "" {
+		_, err = p.Conn.Exec(`UPDATE users SET about=$1 WHERE nickname=$2;`, user.About, user.Nickname)
+		if err != nil {
+			return models.User{}, err
+		}
 	}
 
-	_, err = p.Conn.Exec(`UPDATE users SET email=$1 WHERE nickname=$2;`, user.Email, user.Nickname)
-	if err != nil {
-		return models.User{}, err
+
+	if user.Email != "" {
+		_, err = p.Conn.Exec(`UPDATE users SET email=$1 WHERE nickname=$2;`, user.Email, user.Nickname)
+		if err != nil {
+			return models.User{}, err
+		}
 	}
 
 	return user, nil
@@ -132,14 +140,17 @@ func (p *postgresForumRepository) SelectThreadBySlug(slug string) (models.Thread
 	return thread, nil
 }
 
-func (p *postgresForumRepository) InsertThread(thread models.Thread) error {
-	_, err := p.Conn.Exec(	`Insert INTO thread(Title, Author, Forum, Message, slug, Votes)
-							VALUES ($1, $2, $3, $4, $5, $6);`, thread.Title, thread.Author, thread.Forum,
+func (p *postgresForumRepository) InsertThread(thread models.Thread) (models.Thread,error) {
+	var newThread models.Thread
+	row := p.Conn.QueryRow(	`Insert INTO thread(Title, Author, Forum, Message, slug, Votes)
+							VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`, thread.Title, thread.Author, thread.Forum,
 							thread.Message, thread.Slug, thread.Votes)
+	err := row.Scan(&newThread.Id,&newThread.Title, &newThread.Author, &newThread.Created,
+		&newThread.Forum, &newThread.Message, &newThread.Slug, &newThread.Votes)
 	if err != nil {
-		return err
+		return models.Thread{},err
 	}
-	return nil
+	return newThread, nil
 }
 
 func (p *postgresForumRepository) SelectThreadById(id int) (models.Thread, error) {

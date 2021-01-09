@@ -35,7 +35,7 @@ type ForumRepository interface {
 	UpdateUserInfo(user models.User) (models.User, error)
 	SelectForum(forumName string) (models.Forum, error)
 	SelectThreadBySlug(slug string) (models.Thread, error)
-	InsertThread(thread models.Thread) error
+	InsertThread(thread models.Thread) (models.Thread,error)
 	SelectThreadById(id int) (models.Thread, error)
 	CheckParent(post models.Post) bool
 	InsertPost(post models.Post) (models.Post, error)

@@ -95,10 +95,11 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 		return models.Thread{}, err
 	}
 
-	_, err = f.forumRepo.SelectUser(thread.Author)
+	user, err := f.forumRepo.SelectUser(thread.Author)
 	if err != nil {
 		return models.Thread{}, err
 	}
+	thread.Author = user.Nickname
 
 	if (thread.Slug != "") {
 		threadModel, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
@@ -114,19 +115,19 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 	}
 
 
-	err = f.forumRepo.InsertThread(thread)
+	thread, err = f.forumRepo.InsertThread(thread)
 	if err != nil {
 		return models.Thread{}, err
 	}
 	fmt.Println("popal cuda")
 
-	result, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
-	if err != nil {
-		fmt.Println(err)
-		return models.Thread{}, err
-	}
+	//result, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return models.Thread{}, err
+	//}
 
-	return result, nil
+	return thread, nil
 }
 
 func (f *ForumUsecase) CreatePosts(posts []models.Post, slug string) ([]models.Post, error) {
