@@ -138,20 +138,20 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 	return thread, nil
 }
 
-func (f *ForumUsecase) CreatePosts(posts []models.Post, slug string) ([]models.Post, error) {
-	id, err := strconv.Atoi(slug)
-	var thread models.Thread
-	if err != nil {
-		thread, err = f.forumRepo.SelectThreadBySlug(slug)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		thread, err = f.forumRepo.SelectThreadById(id)
-		if err != nil {
-			return nil, err
-		}
-	}
+func (f *ForumUsecase) CreatePosts(posts []models.Post, thread models.Thread) ([]models.Post, error) {
+	//id, err := strconv.Atoi(slug)
+	//var thread models.Thread
+	//if err != nil {
+	//	thread, err = f.forumRepo.SelectThreadBySlug(slug)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//} else {
+	//	thread, err = f.forumRepo.SelectThreadById(id)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
 
 	for _, post := range posts {
 		_, err := f.forumRepo.SelectUser(post.Author)
@@ -159,9 +159,9 @@ func (f *ForumUsecase) CreatePosts(posts []models.Post, slug string) ([]models.P
 			return nil, err
 		}
 
-		if post.Parent.Valid && !f.forumRepo.CheckParent(post) {
-			return nil, models.ErrConflict
-		}
+		//if post.Parent.Valid && !f.forumRepo.CheckParent(post) {
+		//	return nil, models.ErrConflict
+		//}
 	}
 
 	created := time.Now()
@@ -172,7 +172,7 @@ func (f *ForumUsecase) CreatePosts(posts []models.Post, slug string) ([]models.P
 		post.Forum = thread.Forum
 		post.Created = created
 
-		post, err = f.forumRepo.InsertPost(post)
+		post, err := f.forumRepo.InsertPost(post)
 		if err != nil {
 			fmt.Println(err)
 			return nil, models.ErrConflict

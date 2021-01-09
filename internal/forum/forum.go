@@ -11,7 +11,7 @@ type ForumUseCase interface {
 	ChangeUserProfile(user models.User) (models.User, error)
 	ForumDetails(slug string) (models.Forum, error)
 	CreatingThread(thread models.Thread) (models.Thread, error)
-	CreatePosts(posts []models.Post, slug string) ([]models.Post, error)
+	CreatePosts(posts []models.Post, thread models.Thread) ([]models.Post, error)
 	ThreadDetails(slug string) (models.Thread, error)
 	StatusDB() models.Status
 	ClearDB() error

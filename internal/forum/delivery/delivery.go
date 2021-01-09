@@ -338,15 +338,25 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	slug = strings.TrimSuffix(slug, "/create")
 	fmt.Println(slug)
 
+
+	thread, err := f.ForumUseCase.ThreadDetails(slug)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(models.GetStatusCodePost(err))
+		w.Write(JSONError(err.Error()))
+		return
+	}
+
+
 	var posts []models.Post
-	err := json.NewDecoder(r.Body).Decode(&posts)
+	err = json.NewDecoder(r.Body).Decode(&posts)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	posts, err = f.ForumUseCase.CreatePosts(posts, slug)
+	posts, err = f.ForumUseCase.CreatePosts(posts, thread)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(models.GetStatusCodePost(err))
