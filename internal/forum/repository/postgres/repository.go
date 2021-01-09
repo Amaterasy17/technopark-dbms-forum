@@ -364,7 +364,7 @@ func (p *postgresForumRepository) SelectUsersByForum(slug string, params models.
 										 UNION
 										 Select author from post where forum=$1) as authors
 										 INNER JOIN users on (authors.author=users.nickname)
-										 Where LOWER(author) < LOWER($2)
+										 Where LOWER(author) > LOWER($2)
 										Order By LOWER(authors.author) ASC LIMIT NULLIF($3, 0)`, slug, params.Since,
 										params.Limit)
 		}
