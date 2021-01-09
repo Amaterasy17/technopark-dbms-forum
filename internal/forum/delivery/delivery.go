@@ -132,6 +132,7 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	thread.Forum = slug
+	check := thread.Slug
 
 	fmt.Println("has gone")
 
@@ -157,6 +158,30 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	if check == "" {
+		threadOut := models.ThreadOut{
+			Id:      thread.Id,
+			Title:   thread.Title,
+			Author:  thread.Author,
+			Forum:   thread.Forum,
+			Message: thread.Message,
+			Votes:   thread.Votes,
+			Slug:    thread.Slug,
+			Created: thread.Created,
+		}
+		body, err := json.Marshal(threadOut)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(JSONError(err.Error()))
+			return
+		}
+
+		w.WriteHeader(models.GetStatusCodePost(err))
+		w.Write(body)
 		return
 	}
 
@@ -329,6 +354,7 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
 	body, err := json.Marshal(posts)
 	if err != nil {
 		fmt.Println(err)
@@ -338,7 +364,11 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(models.GetStatusCodePost(err))
-	w.Write(body)
+	if len(posts) == 0 {
+		w.Write([]byte("[]"))
+	} else {
+		w.Write(body)
+	}
 }
 
 func (f *ForumHandler) ThreadDetails(w http.ResponseWriter, r *http.Request) {
@@ -562,7 +592,11 @@ func (f *ForumHandler) ThreadsOfForum(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(body)
+	if len(threads) != 0 {
+		w.Write(body)
+	} else {
+		w.Write([]byte("[]"))
+	}
 }
 
 func (f *ForumHandler) UsersOfForum(w http.ResponseWriter, r *http.Request) {
@@ -605,7 +639,12 @@ func (f *ForumHandler) UsersOfForum(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(body)
+	w.WriteHeader(http.StatusOK)
+	if len(users) != 0 {
+		w.Write(body)
+	} else {
+		w.Write([]byte("[]"))
+	}
 }
 
 

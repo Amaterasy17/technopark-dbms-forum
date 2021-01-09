@@ -185,11 +185,17 @@ func (p *postgresForumRepository) CheckParent(post models.Post) bool {
 	return true
 }
 func (p *postgresForumRepository) InsertPost(post models.Post) (models.Post, error) {
-	row := p.Conn.QueryRow(`INSERT INTO post(author, created, forum, message, parent, thread) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`,
-		post.Author, post.Created, post.Forum, post.Message, post.Parent, post.Thread)
+	var row *pgx.Row
+
+	row = p.Conn.QueryRow(`INSERT INTO post(author, created, forum, message, parent, thread) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`,
+			post.Author, post.Created, post.Forum, post.Message, post.Parent, post.Thread)
+
 	var postModel models.Post
 	err := row.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
 		&postModel.Message, &postModel.Parent, &postModel.Thread, &postModel.Path)
+
+
+
 	return postModel, err
 }
 
@@ -522,26 +528,29 @@ func (p *postgresForumRepository) PostParentTreeSort(threadId int, parameters mo
 func (p *postgresForumRepository) UpdateThread(thread models.Thread) (models.Thread, error) {
 	var row *pgx.Row
 
+
 	if thread.Slug == "" {
 		row = p.Conn.QueryRow(`UPDATE thread SET title=$1, message=$2 WHERE id=$3 RETURNING *`, thread.Title, thread.Message, thread.Id)
 	} else {
-		row = p.Conn.QueryRow(`UPDATE thread SET title=$1, message=$2 WHERE slug=$3 RETURNING *`, thread.Title, thread.Message, thread.Slug)
+		row = p.Conn.QueryRow(`UPDATE thread SET title=$1, message=$2 WHERE LOWER(slug)=LOWER($3) RETURNING *`, thread.Title, thread.Message, thread.Slug)
 	}
 
 	var newThread models.Thread
 
 	err := row.Scan(
 		&newThread.Id,
+		&newThread.Title,
 		&newThread.Author,
 		&newThread.Created,
 		&newThread.Forum,
 		&newThread.Message,
 		&newThread.Slug,
-		&newThread.Title,
 		&newThread.Votes,
 	)
 
 	if err != nil {
+		fmt.Println("FUUUUUUUUUCCKKCKCKCKKCKCK")
+		fmt.Println(err)
 		return models.Thread{}, models.ErrNotFound
 	}
 

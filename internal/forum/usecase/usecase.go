@@ -96,7 +96,7 @@ func (f *ForumUsecase) ForumDetails(slug string) (models.Forum, error) {
 }
 
 func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, error) {
-	_, err := f.forumRepo.SelectForum(thread.Forum)
+	forum, err := f.forumRepo.SelectForum(thread.Forum)
 	if err != nil {
 		return models.Thread{}, err
 	}
@@ -106,6 +106,7 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 		return models.Thread{}, err
 	}
 	thread.Author = user.Nickname
+	thread.Forum = forum.Slug
 
 	if (thread.Slug != "") {
 		threadModel, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
@@ -157,7 +158,7 @@ func (f *ForumUsecase) CreatePosts(posts []models.Post, slug string) ([]models.P
 			return nil, err
 		}
 
-		if post.Parent != 0 && !f.forumRepo.CheckParent(post) {
+		if post.Parent.Valid && !f.forumRepo.CheckParent(post) {
 			return nil, models.ErrConflict
 		}
 	}
