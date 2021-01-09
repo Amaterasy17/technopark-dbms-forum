@@ -19,7 +19,7 @@ func NewForumUsecase(forumRepo domain.ForumRepository) domain.ForumUseCase {
 }
 
 func (f *ForumUsecase) Forum(forum models.Forum) (models.Forum, error) {
-	_, err := f.forumRepo.SelectUser(forum.User)
+	user, err := f.forumRepo.SelectUser(forum.User)
 	if err != nil {
 		return models.Forum{}, err
 	}
@@ -29,6 +29,7 @@ func (f *ForumUsecase) Forum(forum models.Forum) (models.Forum, error) {
 		return forumModel, models.ErrConflict
 	}
 
+	forum.User = user.Nickname
 	err = f.forumRepo.InsertForum(forum)
 	if err != nil {
 		return models.Forum{}, err
@@ -74,6 +75,11 @@ func (f *ForumUsecase) ChangeUserProfile(user models.User) (models.User, error) 
 	}
 
 	userModel, err := f.forumRepo.UpdateUserInfo(user)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	userModel, err = f.forumRepo.SelectUser(user.Nickname)
 	if err != nil {
 		return models.User{}, err
 	}

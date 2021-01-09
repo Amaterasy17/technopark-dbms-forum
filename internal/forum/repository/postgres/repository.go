@@ -5,6 +5,7 @@ import (
 	"github.com/jackc/pgx"
 	domain "technopark-dbms-forum/internal/forum"
 	models "technopark-dbms-forum/models"
+	"time"
 )
 
 type postgresForumRepository struct {
@@ -80,7 +81,7 @@ func (p *postgresForumRepository) InsertUser(user models.User) error {
 
 func (p *postgresForumRepository) SelectUser(user string) (models.User, error) {
 	var userModel models.User
-	row := p.Conn.QueryRow(`Select nickname, fullname, about, email From users Where nickname=$1;`, user)
+	row := p.Conn.QueryRow(`Select Nickname, FullName, About, Email From users Where nickname=$1;`, user)
 	err := row.Scan(&userModel.Nickname, &userModel.FullName, &userModel.About, &userModel.Email)
 	if err != nil {
 		return models.User{}, models.ErrNotFound
@@ -142,9 +143,18 @@ func (p *postgresForumRepository) SelectThreadBySlug(slug string) (models.Thread
 
 func (p *postgresForumRepository) InsertThread(thread models.Thread) (models.Thread,error) {
 	var newThread models.Thread
-	row := p.Conn.QueryRow(	`Insert INTO thread(Title, Author, Forum, Message, slug, Votes)
+	var vremya time.Time
+	var row *pgx.Row
+	if thread.Created == vremya {
+		row = p.Conn.QueryRow(	`Insert INTO thread(Title, Author, Forum, Message, slug, Votes)
 							VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`, thread.Title, thread.Author, thread.Forum,
-							thread.Message, thread.Slug, thread.Votes)
+			thread.Message, thread.Slug, thread.Votes)
+	} else {
+		row = p.Conn.QueryRow(	`Insert INTO thread(Title, Author, Created, Forum, Message, slug, Votes)
+							VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`, thread.Title, thread.Author, thread.Created,
+							thread.Forum,
+			thread.Message, thread.Slug, thread.Votes)
+	}
 	err := row.Scan(&newThread.Id,&newThread.Title, &newThread.Author, &newThread.Created,
 		&newThread.Forum, &newThread.Message, &newThread.Slug, &newThread.Votes)
 	if err != nil {
