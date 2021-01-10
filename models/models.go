@@ -16,6 +16,17 @@ type Forum struct {
 	Threads int    `json:"threads"`
 }
 
+type ThreadOut struct {
+	Id      int       `json:"id"`
+	Title   string    `json:"title"`
+	Author  string    `json:"author"`
+	Forum   string    `json:"forum"`
+	Message string    `json:"message"`
+	Votes   int       `json:"votes"`
+	Slug    string    `json:"-"`
+	Created time.Time `json:"created"`
+}
+
 type Thread struct {
 	Id      int       `json:"id"`
 	Title   string    `json:"title"`
@@ -27,16 +38,7 @@ type Thread struct {
 	Created time.Time `json:"created"`
 }
 
-type ThreadOut struct {
-	Id      int       `json:"id"`
-	Title   string    `json:"title"`
-	Author  string    `json:"author"`
-	Forum   string    `json:"forum"`
-	Message string    `json:"message"`
-	Votes   int       `json:"votes"`
-	Slug    string    `json:"-"`
-	Created time.Time `json:"created"`
-}
+
 
 type ThreadIn struct {
 	Id      int       `json:"id"`
@@ -136,4 +138,17 @@ func IsUuid(value string) bool {
 	_, err := uuid.Parse(value)
 
 	return err == nil
+}
+
+func ThreadToThreadOut(thread Thread) ThreadOut {
+	return ThreadOut{
+		Id:      thread.Id,
+		Title:   thread.Title,
+		Author:  thread.Author,
+		Forum:   thread.Forum,
+		Message: thread.Message,
+		Votes:   thread.Votes,
+		Slug:    thread.Slug,
+		Created: thread.Created,
+	}
 }

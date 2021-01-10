@@ -396,6 +396,21 @@ func (f *ForumHandler) ThreadDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if models.IsUuid(thread.Slug) {
+		result := models.ThreadToThreadOut(thread)
+		body, err := json.Marshal(result)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(JSONError(err.Error()))
+			return
+		}
+
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(body)
+		return
+	}
+
 	body, err := json.Marshal(thread)
 	if err != nil {
 		fmt.Println(err)
@@ -470,6 +485,21 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 
 	//thread.Votes = f.ForumUseCase.SumVotesInThread(thread.Id)
 	thread, err = f.ForumUseCase.ThreadDetails(slug)
+
+	if models.IsUuid(thread.Slug) {
+		result := models.ThreadToThreadOut(thread)
+		body, err := json.Marshal(result)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(JSONError(err.Error()))
+			return
+		}
+
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(body)
+		return
+	}
 
 	body, err := json.Marshal(thread)
 	if err != nil {
@@ -595,7 +625,18 @@ func (f *ForumHandler) ThreadsOfForum(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := json.Marshal(threads)
+	var result []interface{}
+	for _, thr := range threads {
+		if models.IsUuid(thr.Slug) {
+			tOut := models.ThreadToThreadOut(thr)
+
+			result = append(result, tOut)
+		} else {
+			result = append(result, thr)
+		}
+	}
+
+	body, err := json.Marshal(result)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -742,6 +783,22 @@ func (f *ForumHandler) UpdateThread(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
+		return
+	}
+
+	if models.IsUuid(thread.Slug) {
+		result := models.ThreadToThreadOut(thread)
+		body, err := json.Marshal(result)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(JSONError(err.Error()))
+			return
+		}
+
+		w.WriteHeader(models.GetStatusCodeGet(err))
+		w.Write(body)
+
 		return
 	}
 
