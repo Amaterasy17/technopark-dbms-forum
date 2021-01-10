@@ -322,7 +322,13 @@ func (f *ForumUsecase) PostFullDetails(id int, related string) (models.PostFull,
 		if err != nil {
 			return models.PostFull{}, err
 		}
-		postFull.Thread = &thread
+
+		if models.IsUuid(thread.Slug) {
+			result := models.ThreadToThreadOut(thread)
+			postFull.Thread = result
+		} else {
+			postFull.Thread = thread
+		}
 	}
 
 	if strings.Contains(related, "forum") {
