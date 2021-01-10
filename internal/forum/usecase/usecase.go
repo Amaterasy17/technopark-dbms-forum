@@ -226,27 +226,37 @@ func (f *ForumUsecase) ClearDB() error {
 	return f.forumRepo.ClearDB()
 }
 
-func (f *ForumUsecase) MakeVote(vote models.Vote) (models.Vote, error) {
+func (f *ForumUsecase) MakeVote(vote models.Vote, thread models.Thread) (models.Thread, error) {
 	voteResult, err := f.forumRepo.SelectVote(vote)
 	if err != nil {
 		err = f.forumRepo.InsertVote(vote)
 		if err != nil {
 			if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23503" {
-				return models.Vote{}, models.ErrNotFound
+				return models.Thread{}, models.ErrNotFound
 			}
-			return models.Vote{}, err
+			return models.Thread{}, err
 		}
-		return vote, nil
+		if vote.Voice == 1 {
+			thread.Votes++
+		} else {
+			thread.Votes--
+		}
+		return thread, nil
 	}
 
 	if vote.Voice == voteResult.Voice {
-		return voteResult, nil
+		return thread, nil
 	} else {
 		voteResult, err = f.forumRepo.UpdateVote(vote)
 		if err != nil {
-			return models.Vote{}, err
+			return models.Thread{}, err
 		}
-		return voteResult, nil
+		if vote.Voice == 1 {
+			thread.Votes += 2
+		} else {
+			thread.Votes -= 2
+		}
+		return thread, nil
 	}
 
 }

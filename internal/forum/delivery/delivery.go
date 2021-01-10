@@ -460,7 +460,7 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 	}
 	vote.Thread = thread.Id
 
-	vote, err = f.ForumUseCase.MakeVote(vote)
+	thread, err = f.ForumUseCase.MakeVote(vote, thread)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(models.GetStatusCodeGet(err))
@@ -468,7 +468,7 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
-	thread.Votes = f.ForumUseCase.SumVotesInThread(thread.Id)
+	//thread.Votes = f.ForumUseCase.SumVotesInThread(thread.Id)
 
 	body, err := json.Marshal(thread)
 	if err != nil {

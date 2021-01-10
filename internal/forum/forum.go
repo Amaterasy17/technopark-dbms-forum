@@ -16,7 +16,7 @@ type ForumUseCase interface {
 	ThreadDetails(slug string) (models.Thread, error)
 	StatusDB() models.Status
 	ClearDB() error
-	MakeVote(vote models.Vote) (models.Vote, error)
+	MakeVote(vote models.Vote, thread models.Thread) (models.Thread, error)
 	SumVotesInThread(id int) int
 	UpdateMessagePost(update models.PostUpdate) (models.Post, error)
 	PostFullDetails(id int, related string) (models.PostFull, error)
