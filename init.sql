@@ -51,7 +51,8 @@ CREATE UNLOGGED TABLE votes
     Author citext REFERENCES "users" (nickname),
     Voice INT NOT NULL,
     Thread INT,
-    FOREIGN KEY (thread) REFERENCES "thread" (id)
+    FOREIGN KEY (thread) REFERENCES "thread" (id),
+    UNIQUE (Author, Thread)
 );
 
 
@@ -67,7 +68,9 @@ $update_vote$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION updateVotes() RETURNS TRIGGER AS
 $update_vote$
 BEGIN
-    UPDATE thread SET votes=(votes+NEW.Voice*2) WHERE id=NEW.Thread;
+    IF OLD.Voice <> NEW.Voice THEN
+        UPDATE thread SET votes=(votes+NEW.Voice*2) WHERE id=NEW.Thread;
+    END IF;
     return NEW;
 end
 $update_vote$ LANGUAGE plpgsql;
@@ -140,6 +143,7 @@ CREATE INDEX post_table_parent_index ON post ((post.path[1]));
 CREATE INDEX post_thread_id_index ON post (thread, id);
 
 CREATE INDEX thread_slug_index ON thread (slug);
+CREATE INDEX thread_id_index ON thread (id);
 
 CREATE INDEX thread_id_forum_index ON thread (id, forum);
 
