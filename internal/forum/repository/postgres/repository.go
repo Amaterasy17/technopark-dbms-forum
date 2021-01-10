@@ -132,7 +132,7 @@ func (p *postgresForumRepository) UpdateUserInfo(user models.User) (models.User,
 func (p *postgresForumRepository) SelectThreadBySlug(slug string) (models.Thread, error) {
 	var thread models.Thread
 	row := p.Conn.QueryRow(`Select id, title, author, forum, message, votes, slug, created from thread
-							Where slug=$1;`, slug)
+							Where slug=$1 LIMIT 1;`, slug)
 	err := row.Scan(&thread.Id, &thread.Title, &thread.Author, &thread.Forum, &thread.Message, &thread.Votes,
 					&thread.Slug, &thread.Created)
 	if err != nil {
@@ -166,7 +166,7 @@ func (p *postgresForumRepository) InsertThread(thread models.Thread) (models.Thr
 func (p *postgresForumRepository) SelectThreadById(id int) (models.Thread, error) {
 	var thread models.Thread
 	row := p.Conn.QueryRow(`Select id, title, author, forum, message, votes, slug, created from thread
-							Where id=$1;`, id)
+							Where id=$1 LIMIT 1;`, id)
 	err := row.Scan(&thread.Id, &thread.Title, &thread.Author, &thread.Forum, &thread.Message, &thread.Votes,
 		&thread.Slug, &thread.Created)
 	if err != nil {
