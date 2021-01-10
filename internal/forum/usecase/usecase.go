@@ -24,15 +24,22 @@ func (f *ForumUsecase) Forum(forum models.Forum) (models.Forum, error) {
 	if err != nil {
 		return models.Forum{}, err
 	}
-
-	forumModel, err := f.forumRepo.SelectForum(forum.Slug)
-	if err == nil {
-		return forumModel, models.ErrConflict
-	}
+	//
+	//forumModel, err := f.forumRepo.SelectForum(forum.Slug)
+	//if err == nil {
+	//	return forumModel, models.ErrConflict
+	//}
 
 	forum.User = user.Nickname
 	err = f.forumRepo.InsertForum(forum)
 	if err != nil {
+		if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23503" {
+			return models.Forum{}, models.ErrNotFound
+		}
+		if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23505" {
+			forumModel, _ := f.forumRepo.SelectForum(forum.Slug)
+			return forumModel, models.ErrConflict
+		}
 		return models.Forum{}, err
 	}
 
@@ -129,27 +136,11 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 	}
 	fmt.Println("popal cuda")
 
-	//result, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return models.Thread{}, err
-	//}
 
 	return thread, nil
 }
 
 func (f *ForumUsecase) CreatePosts(posts []models.Post, thread models.Thread) ([]models.Post, error) {
-
-	//for _, post := range posts {
-	//	_, err := f.forumRepo.SelectUser(post.Author)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//
-	//	//if post.Parent.Valid && !f.forumRepo.CheckParent(post) {
-	//	//	return nil, models.ErrConflict
-	//	//}
-	//}
 	tx, err := f.forumRepo.NewTransaction()
 	if err != nil {
 		return nil, err

@@ -180,9 +180,9 @@ func (p *postgresForumRepository) CheckParent(post models.Post) bool {
 	fmt.Println(post.Parent)
 	var id string
 	row := p.Conn.QueryRow(`Select author from post where id=$1;`, post.Parent.Int64)
-	fmt.Println("Ебанный рот я перед сканом")
+
 	err := row.Scan(&id)
-	fmt.Println("Ебанный рот я после скана сканом")
+
 	if err == pgx.ErrNoRows {
 		fmt.Printf("FALSE FLASE FALSE")
 		return false

@@ -106,24 +106,6 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	slug = strings.TrimSuffix(slug, "/create")
 	fmt.Println(slug)
 
-	//threadIn := models.ThreadIn{}
-	//err := json.NewDecoder(r.Body).Decode(&threadIn)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//	return
-	//}
-	//thread := models.Thread{
-	//	Id:      threadIn.Id,
-	//	Title:    threadIn.Title,
-	//	Author:   threadIn.Author,
-	//	Forum:    threadIn.Forum,
-	//	Message:  threadIn.Message,
-	//	Votes:   0,
-	//	Slug:     threadIn.Slug,
-	//	Created: time.Time{},
-	//}
-
 	var thread models.Thread
 	err := json.NewDecoder(r.Body).Decode(&thread)
 	if err != nil {

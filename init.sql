@@ -138,21 +138,17 @@ CREATE INDEX post_path_index ON post ((post.path));
 
 CREATE INDEX post_table_parent_index ON post ((post.path[1]));
 
+CREATE INDEX post_id_index ON post (id);
 
+CREATE INDEX thread_id_slug_index ON thread using hash (id, slug);
 
-CREATE INDEX post_thread_id_index ON post (thread, id);
-
-CREATE INDEX thread_slug_index ON thread (slug);
-CREATE INDEX thread_id_index ON thread (id);
-
-CREATE INDEX thread_id_forum_index ON thread (id, forum);
-
+CREATE INDEX forum_index ON forum (Slug);
 
 CREATE INDEX users_nickname_index ON users ((users.Nickname));
 
 CREATE INDEX users_nickname_find_index ON users (lower(users.Nickname));
 
-CREATE INDEX thread_forum_find_index ON thread (lower(forum));
+CREATE INDEX votes_index ON votes (Author, Thread)
 
 
 
