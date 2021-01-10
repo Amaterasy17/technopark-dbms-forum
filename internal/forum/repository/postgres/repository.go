@@ -566,3 +566,11 @@ func (p *postgresForumRepository) UpdateThread(thread models.Thread) (models.Thr
 
 	return newThread, nil
 }
+
+func (p *postgresForumRepository) NewTransaction() (*pgx.Tx, error) {
+	return p.Conn.Begin()
+}
+
+func (p *postgresForumRepository) Rollback(tx *pgx.Tx) {
+	p.Rollback(tx)
+}

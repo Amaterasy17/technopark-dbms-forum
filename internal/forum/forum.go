@@ -1,6 +1,7 @@
 package forum
 
 import (
+	"github.com/jackc/pgx"
 	"technopark-dbms-forum/models"
 )
 
@@ -53,4 +54,6 @@ type ForumRepository interface {
 	PostTreeSort(threadId int, parameters models.Parameters) ([]models.Post, error)
 	PostFlatSort(id int, parameters models.Parameters) ([]models.Post, error)
 	UpdateThread(thread models.Thread) (models.Thread, error)
+	NewTransaction() (*pgx.Tx, error)
+	Rollback(tx *pgx.Tx)
 }

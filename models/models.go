@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/pgtype"
 	"time"
 )
@@ -123,4 +124,16 @@ func (v *JsonNullInt64) UnmarshalJSON(data []byte) error {
 		v.Valid = false
 	}
 	return nil
+}
+
+func IsUuid(value string) bool {
+	n := len(value)
+
+	if n > 36 || n < 32 {
+		return false
+	}
+
+	_, err := uuid.Parse(value)
+
+	return err == nil
 }

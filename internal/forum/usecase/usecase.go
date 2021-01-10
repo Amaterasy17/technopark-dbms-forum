@@ -139,29 +139,20 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 }
 
 func (f *ForumUsecase) CreatePosts(posts []models.Post, thread models.Thread) ([]models.Post, error) {
-	//id, err := strconv.Atoi(slug)
-	//var thread models.Thread
-	//if err != nil {
-	//	thread, err = f.forumRepo.SelectThreadBySlug(slug)
+
+	//for _, post := range posts {
+	//	_, err := f.forumRepo.SelectUser(post.Author)
 	//	if err != nil {
 	//		return nil, err
 	//	}
-	//} else {
-	//	thread, err = f.forumRepo.SelectThreadById(id)
-	//	if err != nil {
-	//		return nil, err
-	//	}
+	//
+	//	//if post.Parent.Valid && !f.forumRepo.CheckParent(post) {
+	//	//	return nil, models.ErrConflict
+	//	//}
 	//}
-
-	for _, post := range posts {
-		_, err := f.forumRepo.SelectUser(post.Author)
-		if err != nil {
-			return nil, err
-		}
-
-		//if post.Parent.Valid && !f.forumRepo.CheckParent(post) {
-		//	return nil, models.ErrConflict
-		//}
+	tx, err := f.forumRepo.NewTransaction()
+	if err != nil {
+		return nil, err
 	}
 
 	created := time.Now()
@@ -174,13 +165,22 @@ func (f *ForumUsecase) CreatePosts(posts []models.Post, thread models.Thread) ([
 
 		post, err := f.forumRepo.InsertPost(post)
 		if err != nil {
-			fmt.Println(err)
-			return nil, models.ErrConflict
+			if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23503" {
+				fmt.Println(err)
+				tx.Rollback()
+				return nil, models.ErrNotFound
+			} else {
+				fmt.Println(err)
+				tx.Rollback()
+				return nil, models.ErrConflict
+			}
+
 		}
 
 		postsCreated = append(postsCreated, post)
 	}
 
+	tx.Commit()
 	return postsCreated, nil
 }
 
