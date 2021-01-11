@@ -140,7 +140,10 @@ CREATE INDEX post_table_parent_index ON post ((post.path[1]));
 
 CREATE INDEX post_id_index ON post (id, Thread);
 
-CREATE INDEX thread_id_slug_index ON thread (id, slug);
+-- CREATE INDEX thread_id_slug_index ON thread (id, slug);
+CREATE INDEX thread_id_hash_index ON thread using hash (id);
+Create index thread_slug_hash_index ON thread using hash (slug);
+
 CREATE INDEX thread_forum_index ON thread (Forum, lower(Author));
 Create INDEX post_forum_index ON post (Forum, lower(Author));
 
