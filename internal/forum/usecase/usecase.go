@@ -277,15 +277,15 @@ func (f *ForumUsecase) SumVotesInThread(id int) int {
 
 func (f *ForumUsecase) UpdateMessagePost(update models.PostUpdate) (models.Post, error){
 	var post models.Post
-	post, err := f.forumRepo.SelectPost(update.ID)
-	if err != nil {
-		return models.Post{}, err
-	}
+	//post, err := f.forumRepo.SelectPost(update.ID)
+	//if err != nil {
+	//	return models.Post{}, err
+	//}
 
-
-	post, err = f.forumRepo.UpdatePost(post, update)
+	post.ID = update.ID
+	post, err := f.forumRepo.UpdatePost(post, update)
 	if err != nil {
-		return models.Post{}, err
+		return models.Post{}, models.ErrNotFound
 	}
 
 	return post, nil

@@ -81,7 +81,7 @@ func (p *postgresForumRepository) InsertUser(user models.User) error {
 
 func (p *postgresForumRepository) SelectUser(user string) (models.User, error) {
 	var userModel models.User
-	row := p.Conn.QueryRow(`Select Nickname, FullName, About, Email From users Where nickname=$1;`, user)
+	row := p.Conn.QueryRow(`Select Nickname, FullName, About, Email From users Where nickname=$1 LIMIT 1;`, user)
 	err := row.Scan(&userModel.Nickname, &userModel.FullName, &userModel.About, &userModel.Email)
 	if err != nil {
 		return models.User{}, models.ErrNotFound
@@ -279,14 +279,16 @@ func (p *postgresForumRepository) SumVotesInThread(id int) int {
 }
 
 func (p *postgresForumRepository) UpdatePost(post models.Post, postUpdate models.PostUpdate) (models.Post, error) {
-	if postUpdate.Message != "" && postUpdate.Message != post.Message {
-		row := p.Conn.QueryRow(`UPDATE post SET message=$1, isEdited=true WHERE id=$2 RETURNING *;`, postUpdate.Message, post.ID)
+
+		row := p.Conn.QueryRow(`UPDATE post SET message=COALESCE(NULLIF($1, ''), message),
+                             isEdited = CASE WHEN $1 = '' OR message = $1 THEN isEdited ELSE true END
+                             WHERE id=$2 RETURNING *`, postUpdate.Message, post.ID)
 		err := row.Scan(&post.ID, &post.Author, &post.Created, &post.Forum,  &post.IsEdited,
 			&post.Message, &post.Parent, &post.Thread, &post.Path)
 		if err != nil {
 			return post, err
 		}
-	}
+
 	return post, nil
 }
 

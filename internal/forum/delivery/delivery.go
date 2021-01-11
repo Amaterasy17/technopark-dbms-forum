@@ -673,7 +673,7 @@ func (f *ForumHandler) UsersOfForum(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+
 	w.WriteHeader(http.StatusOK)
 	if len(users) != 0 {
 		w.Write(body)
