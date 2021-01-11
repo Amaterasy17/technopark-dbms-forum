@@ -9,6 +9,8 @@ import (
 )
 
 type Forum struct {
+	ID      int    `json:"-"`
+	UserId  int    `json:"-"`
 	Title   string `json:"title"`
 	User    string `json:"user"`
 	Slug    string `json:"slug"`
@@ -20,6 +22,7 @@ type ThreadOut struct {
 	Id      int       `json:"id"`
 	Title   string    `json:"title"`
 	Author  string    `json:"author"`
+	AuthorId  int    `json:"-"`
 	Forum   string    `json:"forum"`
 	Message string    `json:"message"`
 	Votes   int       `json:"votes"`
@@ -31,6 +34,7 @@ type Thread struct {
 	Id      int       `json:"id"`
 	Title   string    `json:"title"`
 	Author  string    `json:"author"`
+	AuthorId  int    `json:"-"`
 	Forum   string    `json:"forum"`
 	Message string    `json:"message"`
 	Votes   int       `json:"votes"`
@@ -53,6 +57,7 @@ type ThreadIn struct {
 
 
 type User struct {
+	ID       int    `json:"-"`
 	Nickname string `json:"nickname"`
 	FullName string `json:"fullname"`
 	About    string `json:"about"`
@@ -62,6 +67,7 @@ type User struct {
 type Post struct {
 	ID       int              `json:"id"`
 	Author   string           `json:"author"`
+	AuthorId int              `json:"-"`
 	Created  time.Time        `json:"created"`
 	Forum    string           `json:"forum"`
 	IsEdited bool             `json:"isEdited"`

@@ -25,6 +25,7 @@ func (f *ForumUsecase) Forum(forum models.Forum) (models.Forum, error) {
 	}
 
 	forum.User = user.Nickname
+	forum.UserId = user.ID
 	err = f.forumRepo.InsertForum(forum)
 	if err != nil {
 		if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23503" {
@@ -107,7 +108,7 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 	if err != nil {
 		return models.Thread{}, err
 	}
-	thread.Author = user.Nickname
+	thread.AuthorId = user.ID
 	thread.Forum = forum.Slug
 
 	if (thread.Slug != "") {

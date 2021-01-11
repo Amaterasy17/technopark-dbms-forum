@@ -19,7 +19,7 @@ func NewPostgresForumRepository(Conn *pgx.ConnPool) domain.ForumRepository {
 
 func (p *postgresForumRepository) InsertForum(forum models.Forum) error {
 	_, err := p.Conn.Exec(	`Insert INTO forum(Slug, "user", Title) VALUES ($1, $2, $3);`,
-		forum.Slug, forum.User, forum.Title)
+		forum.Slug, forum.UserId, forum.Title)
 	if err != nil {
 		return err
 	}
@@ -30,11 +30,22 @@ func (p *postgresForumRepository) SelectForum(forumName string) (models.Forum, e
 	var forum models.Forum
 	row := p.Conn.QueryRow(`Select slug, "user", title, posts, threads From forum
 				Where slug=$1 LIMIT 1`, forumName)
-	err := row.Scan(&forum.Slug, &forum.User, &forum.Title, &forum.Posts, &forum.Threads)
+	err := row.Scan(&forum.Slug, &forum.UserId, &forum.Title, &forum.Posts, &forum.Threads)
 	if err != nil {
 		return models.Forum{}, models.ErrNotFound
 	}
+	forum.User = p.SelectNicknameForum(forum.UserId)
 	return forum, nil
+}
+
+func (p *postgresForumRepository) SelectNicknameForum(user_id int) string {
+	var result string
+	row := p.Conn.QueryRow(`Select nickname from users where id=$1 LIMIT 1`, user_id)
+	err := row.Scan(&result)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return result
 }
 
 func (p *postgresForumRepository) CheckForum(forum models.Forum) (models.Forum, bool) {
@@ -75,6 +86,7 @@ func (p *postgresForumRepository) InsertUser(user models.User) error {
 	_, err := p.Conn.Exec(	`Insert INTO users(Nickname, FullName, About, Email) VALUES ($1, $2, $3, $4);`,
 		user.Nickname, user.FullName, user.About, user.Email)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil
@@ -82,8 +94,8 @@ func (p *postgresForumRepository) InsertUser(user models.User) error {
 
 func (p *postgresForumRepository) SelectUser(user string) (models.User, error) {
 	var userModel models.User
-	row := p.Conn.QueryRow(`Select Nickname, FullName, About, Email From users Where nickname=$1 LIMIT 1;`, user)
-	err := row.Scan(&userModel.Nickname, &userModel.FullName, &userModel.About, &userModel.Email)
+	row := p.Conn.QueryRow(`Select id, Nickname, FullName, About, Email From users Where nickname=$1 LIMIT 1;`, user)
+	err := row.Scan(&userModel.ID, &userModel.Nickname, &userModel.FullName, &userModel.About, &userModel.Email)
 	if err != nil {
 		return models.User{}, models.ErrNotFound
 	}
@@ -134,11 +146,12 @@ func (p *postgresForumRepository) SelectThreadBySlug(slug string) (models.Thread
 	var thread models.Thread
 	row := p.Conn.QueryRow(`Select id, title, author, forum, message, votes, slug, created from thread
 							Where slug=$1 LIMIT 1;`, slug)
-	err := row.Scan(&thread.Id, &thread.Title, &thread.Author, &thread.Forum, &thread.Message, &thread.Votes,
+	err := row.Scan(&thread.Id, &thread.Title, &thread.AuthorId, &thread.Forum, &thread.Message, &thread.Votes,
 					&thread.Slug, &thread.Created)
 	if err != nil {
 		return models.Thread{}, models.ErrNotFound
 	}
+	thread.Author = p.SelectNicknameForum(thread.AuthorId)
 	return thread, nil
 }
 
@@ -148,19 +161,20 @@ func (p *postgresForumRepository) InsertThread(thread models.Thread) (models.Thr
 	var row *pgx.Row
 	if thread.Created == vremya {
 		row = p.Conn.QueryRow(	`Insert INTO thread(Title, Author, Forum, Message, slug, Votes)
-							VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`, thread.Title, thread.Author, thread.Forum,
+							VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`, thread.Title, thread.AuthorId, thread.Forum,
 			thread.Message, thread.Slug, thread.Votes)
 	} else {
 		row = p.Conn.QueryRow(	`Insert INTO thread(Title, Author, Created, Forum, Message, slug, Votes)
-							VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`, thread.Title, thread.Author, thread.Created,
+							VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`, thread.Title, thread.AuthorId, thread.Created,
 							thread.Forum,
 			thread.Message, thread.Slug, thread.Votes)
 	}
-	err := row.Scan(&newThread.Id,&newThread.Title, &newThread.Author, &newThread.Created,
+	err := row.Scan(&newThread.Id,&newThread.Title, &newThread.AuthorId, &newThread.Created,
 		&newThread.Forum, &newThread.Message, &newThread.Slug, &newThread.Votes)
 	if err != nil {
 		return models.Thread{},err
 	}
+	newThread.Author = p.SelectNicknameForum(newThread.AuthorId)
 	return newThread, nil
 }
 
@@ -168,11 +182,12 @@ func (p *postgresForumRepository) SelectThreadById(id int) (models.Thread, error
 	var thread models.Thread
 	row := p.Conn.QueryRow(`Select id, title, author, forum, message, votes, slug, created from thread
 							Where id=$1 LIMIT 1;`, id)
-	err := row.Scan(&thread.Id, &thread.Title, &thread.Author, &thread.Forum, &thread.Message, &thread.Votes,
+	err := row.Scan(&thread.Id, &thread.Title, &thread.AuthorId, &thread.Forum, &thread.Message, &thread.Votes,
 		&thread.Slug, &thread.Created)
 	if err != nil {
 		return models.Thread{}, models.ErrNotFound
 	}
+	thread.Author = p.SelectNicknameForum(thread.AuthorId)
 	return thread, nil
 }
 
@@ -284,12 +299,12 @@ func (p *postgresForumRepository) UpdatePost(post models.Post, postUpdate models
 		row := p.Conn.QueryRow(`UPDATE post SET message=COALESCE(NULLIF($1, ''), message),
                              isEdited = CASE WHEN $1 = '' OR message = $1 THEN isEdited ELSE true END
                              WHERE id=$2 RETURNING *`, postUpdate.Message, post.ID)
-		err := row.Scan(&post.ID, &post.Author, &post.Created, &post.Forum,  &post.IsEdited,
+		err := row.Scan(&post.ID, &post.AuthorId, &post.Created, &post.Forum,  &post.IsEdited,
 			&post.Message, &post.Parent, &post.Thread, &post.Path)
 		if err != nil {
 			return post, err
 		}
-
+	post.Author = p.SelectNickById(post.AuthorId)
 	return post, nil
 }
 
@@ -297,11 +312,12 @@ func (p *postgresForumRepository) UpdatePost(post models.Post, postUpdate models
 func (p *postgresForumRepository) SelectPost(id int) (models.Post, error) {
 	var postModel models.Post
 	row := p.Conn.QueryRow(`Select id, author, created, forum, isEdited, message, parent, thread from post Where id=$1;`, id)
-	err := row.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
+	err := row.Scan(&postModel.ID, &postModel.AuthorId, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
 		&postModel.Message, &postModel.Parent, &postModel.Thread)
 	if err != nil {
 		return models.Post{}, models.ErrNotFound
 	}
+	postModel.Author = p.SelectNickById(postModel.AuthorId)
 	return postModel, nil
 }
 
@@ -336,11 +352,12 @@ func (p *postgresForumRepository) SelectThreads(slug string, params models.Param
 
 	for rows.Next() {
 		var thread models.Thread
-		err = rows.Scan(&thread.Id, &thread.Author, &thread.Created, &thread.Forum, &thread.Message,
+		err = rows.Scan(&thread.Id, &thread.AuthorId, &thread.Created, &thread.Forum, &thread.Message,
 			&thread.Slug, &thread.Title, &thread.Votes)
 		if err != nil {
 			continue
 		}
+		thread.Author = p.SelectNicknameForum(thread.AuthorId)
 		threads = append(threads, thread)
 	}
 	return threads, nil
@@ -483,11 +500,12 @@ func (p *postgresForumRepository) PostFlatSort(id int, parameters models.Paramet
 
 	for rows.Next() {
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Message, &post.Parent, &post.Thread)
+		err = rows.Scan(&post.ID, &post.AuthorId, &post.Created, &post.Forum, &post.IsEdited, &post.Message, &post.Parent, &post.Thread)
 		if err != nil {
 			return posts, err
 		}
 
+		post.Author = p.SelectNickById(post.AuthorId)
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -526,11 +544,12 @@ func (p *postgresForumRepository) PostTreeSort(threadId int, parameters models.P
 
 	for rows.Next() {
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Message, &post.Parent, &post.Thread)
+		err = rows.Scan(&post.ID, &post.AuthorId, &post.Created, &post.Forum, &post.IsEdited, &post.Message, &post.Parent, &post.Thread)
 		if err != nil {
 			return posts, err
 		}
 
+		post.Author = p.SelectNickById(post.AuthorId)
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -573,12 +592,13 @@ func (p *postgresForumRepository) PostParentTreeSort(threadId int, parameters mo
 
 	for rows.Next() {
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Message,
+		err = rows.Scan(&post.ID, &post.AuthorId, &post.Created, &post.Forum, &post.IsEdited, &post.Message,
 			&post.Parent, &post.Thread)
 		if err != nil {
 			return posts, err
 		}
 
+		post.Author = p.SelectNickById(post.AuthorId)
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -599,13 +619,15 @@ func (p *postgresForumRepository) UpdateThread(thread models.Thread) (models.Thr
 	err := row.Scan(
 		&newThread.Id,
 		&newThread.Title,
-		&newThread.Author,
+		&newThread.AuthorId,
 		&newThread.Created,
 		&newThread.Forum,
 		&newThread.Message,
 		&newThread.Slug,
 		&newThread.Votes,
 	)
+
+	newThread.Author = p.SelectNickById(newThread.AuthorId)
 
 	if err != nil {
 		fmt.Println(err)
@@ -634,9 +656,12 @@ func (p *postgresForumRepository) InsertPosts(posts []models.Post, thread models
 			i * 6 + 1, i * 6 + 2, i * 6 + 3, i * 6 + 4, i * 6 + 5, i * 6 + 6,
 		)
 
+		userId := p.SelectIdByNickname(post.Author)
+
+
 		query += value
 
-		values = append(values, post.Author)
+		values = append(values, userId)
 		values = append(values, created)
 		values = append(values, thread.Forum)
 		values = append(values, post.Message)
@@ -657,7 +682,7 @@ func (p *postgresForumRepository) InsertPosts(posts []models.Post, thread models
 
 	for rows.Next() {
 		var postModel models.Post
-		err := rows.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
+		err := rows.Scan(&postModel.ID, &postModel.AuthorId, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
 			&postModel.Message, &postModel.Parent, &postModel.Thread, &postModel.Path)
 		if err != nil {
 			fmt.Println("error of SCAN")
@@ -668,8 +693,29 @@ func (p *postgresForumRepository) InsertPosts(posts []models.Post, thread models
 			postModel.Parent.Int64 = 0
 			postModel.Parent.Valid = true
 		}
+		postModel.Author = p.SelectNicknameForum(postModel.AuthorId)
 		postsResult = append(postsResult, postModel)
 	}
 
 	return postsResult, err
+}
+
+func (p *postgresForumRepository) SelectNickById(userId int) string {
+	var result string
+	row := p.Conn.QueryRow(`Select nickname from users where id=$1 LIMIT 1`, userId)
+	err := row.Scan(&result)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return result
+}
+
+func (p *postgresForumRepository) SelectIdByNickname(nick string) int {
+	var result int
+	row := p.Conn.QueryRow(`Select id from users where nickname=$1 LIMIT 1`, nick)
+	err := row.Scan(&result)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return result
 }

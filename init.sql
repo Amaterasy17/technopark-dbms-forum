@@ -2,7 +2,8 @@ CREATE EXTENSION IF NOT EXISTS citext;
 
 CREATE UNLOGGED TABLE users
 (
-    Nickname citext PRIMARY KEY,
+    Id       Serial PRIMARY KEY,
+    Nickname citext UNIQUE,
     FullName text NOT NULL,
     About    text,
     Email    citext UNIQUE
@@ -11,7 +12,7 @@ CREATE UNLOGGED TABLE users
 CREATE UNLOGGED TABLE forum
 (
     Slug    citext PRIMARY KEY,
-    "user"  citext REFERENCES "users" (Nickname),
+    "user"  int REFERENCES "users" (Id),
     Title   text NOT NULL,
     Posts   BIGINT DEFAULT 0,
     Threads INT    DEFAULT 0
@@ -21,7 +22,7 @@ CREATE UNLOGGED TABLE thread
 (
     id      SERIAL PRIMARY KEY,
     Title   text not null,
-    Author  citext REFERENCES "users" (Nickname),
+    Author  int REFERENCES "users" (Id),
     Created timestamp with time zone default now(),
     Forum   citext REFERENCES "forum" (slug),
     Message text NOT NULL,
@@ -32,7 +33,7 @@ CREATE UNLOGGED TABLE thread
 CREATE UNLOGGED TABLE post
 (
     id       BIGSERIAL PRIMARY KEY,
-    Author   citext REFERENCES "users" (nickname),
+    Author   int REFERENCES "users" (id),
     Created  timestamp with time zone default now(),
     Forum    citext,
     isEdited BOOLEAN                  DEFAULT FALSE,
@@ -74,13 +75,27 @@ end
 $update_vote$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION updateUserForum() RETURNS TRIGGER AS
-$update_forum$
+CREATE OR REPLACE FUNCTION updatePostUserForum() RETURNS TRIGGER AS
+$update_forum_post$
+DECLARE
+    author_nick citext;
 BEGIN
-    INSERT INTO users_forum (nickname, Slug) VALUES (NEW.author, NEW.forum) on conflict do nothing;
+    SELECT Nickname FROM users WHERE id = new.Author INTO author_nick;
+    INSERT INTO users_forum (nickname, Slug) VALUES (author_nick, NEW.forum) on conflict do nothing;
     return NEW;
 end
-$update_forum$ LANGUAGE plpgsql;
+$update_forum_post$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION updateThreadUserForum() RETURNS TRIGGER AS
+$update_forum_thread$
+DECLARE
+    author_nick citext;
+BEGIN
+    SELECT Nickname FROM users WHERE id = new.Author INTO author_nick;
+    INSERT INTO users_forum (nickname, Slug) VALUES (author_nick, NEW.forum) on conflict do nothing;
+    return NEW;
+end
+$update_forum_thread$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION updateVotes() RETURNS TRIGGER AS
@@ -156,13 +171,13 @@ CREATE TRIGGER post_insert_user_forum
     AFTER INSERT
     ON post
     FOR EACH ROW
-EXECUTE PROCEDURE updateUserForum();
+EXECUTE PROCEDURE updatePostUserForum();
 
 CREATE TRIGGER thread_insert_user_forum
     AFTER INSERT
     ON thread
     FOR EACH ROW
-EXECUTE PROCEDURE updateUserForum();
+EXECUTE PROCEDURE updateThreadUserForum();
 
 -- CREATE INDEX post_path_index ON post ((post.path));
 

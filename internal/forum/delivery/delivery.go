@@ -196,6 +196,7 @@ func (f *ForumHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	users, err := f.ForumUseCase.CreateUser(user)
 	status := models.GetStatusCodePost(err)
+	fmt.Println(status)
 	if status == 409 {
 		body, err := json.Marshal(users)
 		if err != nil {

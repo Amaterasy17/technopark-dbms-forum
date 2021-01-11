@@ -57,4 +57,5 @@ type ForumRepository interface {
 	NewTransaction() (*pgx.Tx, error)
 	Rollback(tx *pgx.Tx)
 	InsertPosts(posts []models.Post, thread models.Thread) ([]models.Post, error)
+	SelectNickById(userId int) string
 }
