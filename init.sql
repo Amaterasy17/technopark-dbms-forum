@@ -194,7 +194,7 @@ CREATE INDEX forum_index ON forum (Slug);
 
 CREATE INDEX votes_index ON votes (Author, Thread);
 
-CREATE INDEX post_created_index ON post (Created);
+
 CREATE INDEX thread_created_index ON thread (Created)
 
 
