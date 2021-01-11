@@ -111,10 +111,10 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 	thread.Forum = forum.Slug
 
 	if (thread.Slug != "") {
-		threadModel, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
-		if err == nil {
-			return threadModel, models.ErrConflict
-		}
+		//threadModel, err := f.forumRepo.SelectThreadBySlug(thread.Slug)
+		//if err == nil {
+		//	return threadModel, models.ErrConflict
+		//}
 	} else {
 		slug, err := uuid.NewRandom()
 		if err != nil {
@@ -123,13 +123,17 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 		thread.Slug = slug.String()
 	}
 
-
+	slug := thread.Slug
 	thread, err = f.forumRepo.InsertThread(thread)
 	if err != nil {
+		if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23505" {
+			threadModel, _ := f.forumRepo.SelectThreadBySlug(slug)
+			return threadModel, models.ErrConflict
+		}
+
+
 		return models.Thread{}, err
 	}
-	fmt.Println("popal cuda")
-
 
 	return thread, nil
 }
