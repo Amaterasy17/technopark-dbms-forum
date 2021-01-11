@@ -231,10 +231,6 @@ func (f *ForumUsecase) ClearDB() error {
 }
 
 func (f *ForumUsecase) MakeVote(vote models.Vote, thread models.Thread) (models.Thread, error) {
-	//voteResult, err := f.forumRepo.SelectVote(vote)
-	fmt.Println("WORK PLEASE MRAZ")
-	fmt.Println(vote)
-	fmt.Println(thread)
 	err := f.forumRepo.InsertVote(vote)
 	if err != nil {
 		if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23505" {
@@ -250,38 +246,6 @@ func (f *ForumUsecase) MakeVote(vote models.Vote, thread models.Thread) (models.
 		return models.Thread{}, err
 	}
 	return thread, nil
-
-	//if err != nil {
-	//	err = f.forumRepo.InsertVote(vote)
-	//	if err != nil {
-	//		if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23503" {
-	//			return models.Thread{}, models.ErrNotFound
-	//		}
-	//		return models.Thread{}, err
-	//	}
-	//	if vote.Voice == 1 {
-	//		thread.Votes++
-	//	} else {
-	//		thread.Votes--
-	//	}
-	//	return thread, nil
-	//}
-
-	//if vote.Voice == voteResult.Voice {
-	//	return thread, nil
-	//} else {
-	//	voteResult, err = f.forumRepo.UpdateVote(vote)
-	//	if err != nil {
-	//		return models.Thread{}, err
-	//	}
-	//	if vote.Voice == 1 {
-	//		thread.Votes += 2
-	//	} else {
-	//		thread.Votes -= 2
-	//	}
-	//	return thread, nil
-	//}
-
 }
 
 func (f *ForumUsecase) SumVotesInThread(id int) int {
@@ -290,10 +254,7 @@ func (f *ForumUsecase) SumVotesInThread(id int) int {
 
 func (f *ForumUsecase) UpdateMessagePost(update models.PostUpdate) (models.Post, error){
 	var post models.Post
-	//post, err := f.forumRepo.SelectPost(update.ID)
-	//if err != nil {
-	//	return models.Post{}, err
-	//}
+
 
 	post.ID = update.ID
 	post, err := f.forumRepo.UpdatePost(post, update)

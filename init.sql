@@ -55,6 +55,15 @@ CREATE UNLOGGED TABLE votes
     UNIQUE (Author, Thread)
 );
 
+CREATE UNLOGGED TABLE users_forum
+(
+    nickname citext NOT NULL,
+    slug     citext NOT NULL,
+    FOREIGN KEY (nickname) REFERENCES "users" (nickname),
+    FOREIGN KEY (slug) REFERENCES "forum" (slug),
+    UNIQUE (nickname, slug)
+);
+
 
 CREATE OR REPLACE FUNCTION insertVotes() RETURNS TRIGGER AS
 $update_vote$
@@ -63,6 +72,15 @@ BEGIN
     return NEW;
 end
 $update_vote$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION updateUserForum() RETURNS TRIGGER AS
+$update_forum$
+BEGIN
+    INSERT INTO users_forum (nickname, Slug) VALUES (NEW.author, NEW.forum) on conflict do nothing;
+    return NEW;
+end
+$update_forum$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION updateVotes() RETURNS TRIGGER AS
@@ -134,18 +152,30 @@ CREATE TRIGGER update_path_trigger
     FOR EACH ROW
 EXECUTE PROCEDURE updatePath();
 
-CREATE INDEX post_path_index ON post ((post.path));
+CREATE TRIGGER post_insert_user_forum
+    AFTER INSERT
+    ON post
+    FOR EACH ROW
+EXECUTE PROCEDURE updateUserForum();
 
-CREATE INDEX post_table_parent_index ON post ((post.path[1]));
+CREATE TRIGGER thread_insert_user_forum
+    AFTER INSERT
+    ON thread
+    FOR EACH ROW
+EXECUTE PROCEDURE updateUserForum();
 
-CREATE INDEX post_id_index ON post (id, Thread);
+-- CREATE INDEX post_path_index ON post ((post.path));
+
+-- CREATE INDEX post_table_parent_index ON post ((post.path[1]));
+--
+-- CREATE INDEX post_id_index ON post using hash (id);
 
 
 CREATE INDEX thread_id_hash_index ON thread using hash (id);
 Create index thread_slug_hash_index ON thread using hash (slug);
 
 CREATE INDEX thread_forum_index ON thread (Forum, lower(Author));
-Create INDEX post_forum_index ON post (Forum, lower(Author));
+-- Create INDEX post_forum_index ON post (Forum, lower(Author));
 
 CREATE INDEX forum_index ON forum (Slug);
 
@@ -155,7 +185,7 @@ CREATE INDEX users_nickname_find_index ON users (lower(users.Nickname));
 
 CREATE INDEX votes_index ON votes (Author, Thread);
 
-CREATE INDEX post_created_index ON post (Created);
+-- CREATE INDEX post_created_index ON post (Created);
 CREATE INDEX thread_created_index ON thread (Created)
 
 

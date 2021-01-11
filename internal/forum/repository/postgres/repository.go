@@ -347,63 +347,109 @@ func (p *postgresForumRepository) SelectThreads(slug string, params models.Param
 }
 
 func (p *postgresForumRepository) SelectUsersByForum(slug string, params models.Parameters) ([]models.User, error) {
-	var err error
-	var rows *pgx.Rows
-	var users []models.User
+	//var err error
+	//var rows *pgx.Rows
+	//var users []models.User
 
-	if params.Since != "" {
-		if params.Desc {
-			rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
-										(SELECT author from thread where forum=$1
-										 UNION
-										 Select author from post where forum=$1) as authors
-										 INNER JOIN users on (authors.author=users.nickname)
-										 Where LOWER(author) < LOWER($2)
-										Order By LOWER(authors.author) DESC LIMIT NULLIF($3, 0)`, slug, params.Since,
-										  params.Limit)
+	//if params.Since != "" {
+	//	if params.Desc {
+	//		rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
+	//									(SELECT author from thread where forum=$1
+	//									 UNION
+	//									 Select author from post where forum=$1) as authors
+	//									 INNER JOIN users on (authors.author=users.nickname)
+	//									 Where LOWER(author) < LOWER($2)
+	//									Order By LOWER(authors.author) DESC LIMIT NULLIF($3, 0)`, slug, params.Since,
+	//									  params.Limit)
+	//	} else {
+	//		rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
+	//									(SELECT author from thread where forum=$1
+	//									 UNION
+	//									 Select author from post where forum=$1) as authors
+	//									 INNER JOIN users on (authors.author=users.nickname)
+	//									 Where LOWER(author) > LOWER($2)
+	//									Order By LOWER(authors.author) ASC LIMIT NULLIF($3, 0)`, slug, params.Since,
+	//									params.Limit)
+	//	}
+	//} else {
+	//	if params.Desc {
+	//		rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
+	//									(SELECT author from thread where forum=$1
+	//									 UNION
+	//									 Select author from post where forum=$1) as authors
+	//									 INNER JOIN users on (authors.author=users.nickname)
+	//									Order By LOWER(authors.author) DESC LIMIT NULLIF($2, 0)`, slug, params.Limit)
+	//	} else {
+	//		rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
+	//									(SELECT author from thread where forum=$1
+	//									 UNION
+	//									 Select author from post where forum=$1) as authors
+	//									 INNER JOIN users on (authors.author=users.nickname)
+	//									Order By LOWER(authors.author) ASC LIMIT NULLIF($2, 0)`, slug, params.Limit)
+	//	}
+	//}
+
+	//if err != nil {
+	//	return users, err
+	//}
+	//defer rows.Close()
+	//
+	//for rows.Next() {
+	//	var user models.User
+	//	err = rows.Scan(&user.Nickname, &user.FullName, &user.About, &user.Email)
+	//	if err != nil {
+	//		return users, err
+	//	}
+	//	users = append(users, user)
+	//}
+	//
+	//return users, nil
+	var query string
+	if params.Desc {
+		if params.Since != "" {
+			query = fmt.Sprintf(`SELECT users.about, users.Email, users.FullName, users.Nickname FROM users
+    	inner join users_forum uf on users.Nickname = uf.nickname
+        WHERE uf.slug =$1 AND uf.nickname < '%s'
+        ORDER BY users.Nickname DESC LIMIT NULLIF($2, 0)`, params.Since)
 		} else {
-			rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
-										(SELECT author from thread where forum=$1
-										 UNION
-										 Select author from post where forum=$1) as authors
-										 INNER JOIN users on (authors.author=users.nickname)
-										 Where LOWER(author) > LOWER($2)
-										Order By LOWER(authors.author) ASC LIMIT NULLIF($3, 0)`, slug, params.Since,
-										params.Limit)
+			query = `SELECT users.about, users.Email, users.FullName, users.Nickname FROM users
+    	inner join users_forum uf on users.Nickname = uf.nickname
+        WHERE uf.slug =$1
+        ORDER BY users.Nickname DESC LIMIT NULLIF($2, 0)`
 		}
 	} else {
-		if params.Desc {
-			rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
-										(SELECT author from thread where forum=$1
-										 UNION
-										 Select author from post where forum=$1) as authors
-										 INNER JOIN users on (authors.author=users.nickname)
-										Order By LOWER(authors.author) DESC LIMIT NULLIF($2, 0)`, slug, params.Limit)
-		} else {
-			rows, err = p.Conn.Query(`SELECT nickname, fullname, about, email From
-										(SELECT author from thread where forum=$1
-										 UNION
-										 Select author from post where forum=$1) as authors
-										 INNER JOIN users on (authors.author=users.nickname)
-										Order By LOWER(authors.author) ASC LIMIT NULLIF($2, 0)`, slug, params.Limit)
-		}
+		query = fmt.Sprintf(`SELECT users.about, users.Email, users.FullName, users.Nickname FROM users
+    	inner join users_forum uf on users.Nickname = uf.nickname
+        WHERE uf.slug =$1 AND uf.nickname > '%s'
+        ORDER BY users.Nickname LIMIT NULLIF($2, 0)`, params.Since)
 	}
+	var data []models.User
+	row, err := p.Conn.Query(query, slug, params.Limit)
 
 	if err != nil {
-		return users, err
+		return data, nil
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		var user models.User
-		err = rows.Scan(&user.Nickname, &user.FullName, &user.About, &user.Email)
-		if err != nil {
-			return users, err
+	defer func() {
+		if row != nil {
+			row.Close()
 		}
-		users = append(users, user)
+	}()
+
+	for row.Next() {
+
+		var u models.User
+
+		err = row.Scan(&u.About, &u.Email, &u.FullName, &u.Nickname)
+
+		if err != nil {
+			return data, err
+		}
+
+		data = append(data, u)
 	}
 
-	return users, nil
+	return data, err
 }
 
 

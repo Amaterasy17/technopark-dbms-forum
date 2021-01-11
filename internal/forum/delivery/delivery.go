@@ -497,7 +497,7 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
-	//thread.Votes = f.ForumUseCase.SumVotesInThread(thread.Id)
+
 	thread, err = f.ForumUseCase.ThreadDetails(slug)
 
 	if models.IsUuid(thread.Slug) {
