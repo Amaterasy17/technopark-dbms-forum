@@ -56,4 +56,5 @@ type ForumRepository interface {
 	UpdateThread(thread models.Thread) (models.Thread, error)
 	NewTransaction() (*pgx.Tx, error)
 	Rollback(tx *pgx.Tx)
+	InsertPosts(posts []models.Post, thread models.Thread) ([]models.Post, error)
 }

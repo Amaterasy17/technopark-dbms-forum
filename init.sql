@@ -96,7 +96,7 @@ BEGIN
     ELSE
         SELECT path FROM post WHERE id = new.parent INTO parentPath;
         SELECT thread FROM post WHERE id = parentPath[1] INTO first_parent_thread;
-        IF NOT FOUND OR first_parent_thread != NEW.thread THEN
+        IF NOT FOUND OR first_parent_thread <> NEW.thread THEN
             RAISE EXCEPTION 'parent is from different thread' USING ERRCODE = '00409';
         end if;
 

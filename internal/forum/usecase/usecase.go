@@ -8,7 +8,6 @@ import (
 	"strings"
 	domain "technopark-dbms-forum/internal/forum"
 	"technopark-dbms-forum/models"
-	"time"
 )
 
 type ForumUsecase struct {
@@ -24,11 +23,6 @@ func (f *ForumUsecase) Forum(forum models.Forum) (models.Forum, error) {
 	if err != nil {
 		return models.Forum{}, err
 	}
-	//
-	//forumModel, err := f.forumRepo.SelectForum(forum.Slug)
-	//if err == nil {
-	//	return forumModel, models.ErrConflict
-	//}
 
 	forum.User = user.Nickname
 	err = f.forumRepo.InsertForum(forum)
@@ -145,32 +139,47 @@ func (f *ForumUsecase) CreatePosts(posts []models.Post, thread models.Thread) ([
 	if err != nil {
 		return nil, err
 	}
-
-	created := time.Now()
-
 	var postsCreated []models.Post
-	for _, post := range posts {
-		post.Thread = thread.Id
-		post.Forum = thread.Forum
-		post.Created = created
 
-		post, err := f.forumRepo.InsertPost(post)
-		if err != nil {
-			if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23503" {
-				fmt.Println(err)
-				tx.Rollback()
-				return nil, models.ErrNotFound
-			} else {
-				fmt.Println(err)
-				tx.Rollback()
-				return nil, models.ErrConflict
-			}
-
+	postsCreated, err = f.forumRepo.InsertPosts(posts, thread)
+	if err != nil {
+		fmt.Println("error")
+		fmt.Println(err)
+		if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23503" {
+						fmt.Println(err)
+						tx.Rollback()
+						return nil, models.ErrNotFound
+		} else {
+			fmt.Println(err)
+			tx.Rollback()
+			return nil, models.ErrConflict
 		}
-
-		postsCreated = append(postsCreated, post)
 	}
-
+	//created := time.Now()
+	//
+	//var postsCreated []models.Post
+	//for _, post := range posts {
+	//	post.Thread = thread.Id
+	//	post.Forum = thread.Forum
+	//	post.Created = created
+	//
+	//	post, err := f.forumRepo.InsertPost(post)
+	//	if err != nil {
+	//		if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23503" {
+	//			fmt.Println(err)
+	//			tx.Rollback()
+	//			return nil, models.ErrNotFound
+	//		} else {
+	//			fmt.Println(err)
+	//			tx.Rollback()
+	//			return nil, models.ErrConflict
+	//		}
+	//
+	//	}
+	//
+	//	postsCreated = append(postsCreated, post)
+	//}
+	//
 	tx.Commit()
 	return postsCreated, nil
 }

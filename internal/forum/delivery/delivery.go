@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx"
 	"net/http"
 	"strconv"
 	"strings"
@@ -62,7 +63,6 @@ func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 
 	forum, err = f.ForumUseCase.Forum(forum)
 	status := models.GetStatusCodePost(err)
@@ -338,8 +338,40 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(posts) == 0 {
+		w.WriteHeader(201)
+		w.Write([]byte("[]"))
+		return
+	}
+
+	author := posts[0].Author
 	posts, err = f.ForumUseCase.CreatePosts(posts, thread)
+	if len(posts) == 0 {
+		err = pgx.ErrNoRows
+	}
 	if err != nil {
+
+		if err == pgx.ErrNoRows {
+			_, err = f.ForumUseCase.ThreadDetails(slug)
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(models.GetStatusCodePost(err))
+				w.Write(JSONError(err.Error()))
+				return
+			}
+			_, err = f.ForumUseCase.GetUser(author)
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(models.GetStatusCodePost(err))
+				w.Write(JSONError(err.Error()))
+				return
+			}
+			Err := models.ErrConflict
+			w.WriteHeader(models.GetStatusCodePost(Err))
+			w.Write(JSONError(Err.Error()))
+			return
+		}
+
 		fmt.Println(err)
 		w.WriteHeader(models.GetStatusCodePost(err))
 		w.Write(JSONError(err.Error()))

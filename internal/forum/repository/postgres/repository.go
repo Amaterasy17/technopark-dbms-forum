@@ -3,6 +3,7 @@ package postgres
 import (
 	"fmt"
 	"github.com/jackc/pgx"
+	"strings"
 	domain "technopark-dbms-forum/internal/forum"
 	models "technopark-dbms-forum/models"
 	"time"
@@ -28,7 +29,7 @@ func (p *postgresForumRepository) InsertForum(forum models.Forum) error {
 func (p *postgresForumRepository) SelectForum(forumName string) (models.Forum, error) {
 	var forum models.Forum
 	row := p.Conn.QueryRow(`Select slug, "user", title, posts, threads From forum
-				Where slug=$1`, forumName)
+				Where slug=$1 LIMIT 1`, forumName)
 	err := row.Scan(&forum.Slug, &forum.User, &forum.Title, &forum.Posts, &forum.Threads)
 	if err != nil {
 		return models.Forum{}, models.ErrNotFound
@@ -561,7 +562,6 @@ func (p *postgresForumRepository) UpdateThread(thread models.Thread) (models.Thr
 	)
 
 	if err != nil {
-		fmt.Println("FUUUUUUUUUCCKKCKCKCKKCKCK")
 		fmt.Println(err)
 		return models.Thread{}, models.ErrNotFound
 	}
@@ -575,4 +575,55 @@ func (p *postgresForumRepository) NewTransaction() (*pgx.Tx, error) {
 
 func (p *postgresForumRepository) Rollback(tx *pgx.Tx) {
 	p.Rollback(tx)
+}
+
+func (p *postgresForumRepository) InsertPosts(posts []models.Post, thread models.Thread) ([]models.Post, error) {
+	query := `INSERT INTO post(author, created, forum, message, parent, thread) VALUES`
+
+	var values []interface{}
+	created := time.Now()
+	for i, post := range posts {
+		value := fmt.Sprintf(
+			"($%d, $%d, $%d, $%d, $%d, $%d),",
+			i * 6 + 1, i * 6 + 2, i * 6 + 3, i * 6 + 4, i * 6 + 5, i * 6 + 6,
+		)
+
+		query += value
+
+		values = append(values, post.Author)
+		values = append(values, created)
+		values = append(values, thread.Forum)
+		values = append(values, post.Message)
+		values = append(values, post.Parent)
+		values = append(values, thread.Id)
+	}
+
+	query = strings.TrimSuffix(query, ",")
+	query += ` RETURNING *`
+
+	rows, err := p.Conn.Query(query, values...)
+	if err != nil {
+		fmt.Println("error of insert")
+		return nil, err
+	}
+	defer rows.Close()
+	var postsResult []models.Post
+
+	for rows.Next() {
+		var postModel models.Post
+		err := rows.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
+			&postModel.Message, &postModel.Parent, &postModel.Thread, &postModel.Path)
+		if err != nil {
+			fmt.Println("error of SCAN")
+			return nil, err
+		}
+
+		if !postModel.Parent.Valid {
+			postModel.Parent.Int64 = 0
+			postModel.Parent.Valid = true
+		}
+		postsResult = append(postsResult, postModel)
+	}
+
+	return postsResult, err
 }
