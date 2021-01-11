@@ -12,7 +12,7 @@ CREATE UNLOGGED TABLE users
 CREATE UNLOGGED TABLE forum
 (
     Slug    citext PRIMARY KEY,
-    "user"  int REFERENCES "users" (Id),
+    "user"  int,
     Title   text NOT NULL,
     Posts   BIGINT DEFAULT 0,
     Threads INT    DEFAULT 0
@@ -22,7 +22,7 @@ CREATE UNLOGGED TABLE thread
 (
     id      SERIAL PRIMARY KEY,
     Title   text not null,
-    Author  int REFERENCES "users" (Id),
+    Author  int,
     Created timestamp with time zone default now(),
     Forum   citext REFERENCES "forum" (slug),
     Message text NOT NULL,
@@ -33,7 +33,8 @@ CREATE UNLOGGED TABLE thread
 CREATE UNLOGGED TABLE post
 (
     id       BIGSERIAL PRIMARY KEY,
-    Author   int REFERENCES "users" (id),
+--     Author   int REFERENCES "users" (id),
+    Author   int,
     Created  timestamp with time zone default now(),
     Forum    citext,
     isEdited BOOLEAN                  DEFAULT FALSE,
@@ -179,28 +180,21 @@ CREATE TRIGGER thread_insert_user_forum
     FOR EACH ROW
 EXECUTE PROCEDURE updateThreadUserForum();
 
--- CREATE INDEX post_path_index ON post ((post.path));
+CREATE INDEX post_path_index ON post ((post.path));
 
--- CREATE INDEX post_table_parent_index ON post ((post.path[1]));
---
--- CREATE INDEX post_id_index ON post using hash (id);
+
 
 
 CREATE INDEX thread_id_hash_index ON thread using hash (id);
 Create index thread_slug_hash_index ON thread using hash (slug);
 
-CREATE INDEX thread_forum_index ON thread (Forum, lower(Author));
--- Create INDEX post_forum_index ON post (Forum, lower(Author));
 
 CREATE INDEX forum_index ON forum (Slug);
 
-CREATE INDEX users_nickname_index ON users ((users.Nickname));
-
-CREATE INDEX users_nickname_find_index ON users (lower(users.Nickname));
 
 CREATE INDEX votes_index ON votes (Author, Thread);
 
--- CREATE INDEX post_created_index ON post (Created);
+CREATE INDEX post_created_index ON post (Created);
 CREATE INDEX thread_created_index ON thread (Created)
 
 
