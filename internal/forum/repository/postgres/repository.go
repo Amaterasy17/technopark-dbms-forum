@@ -299,12 +299,12 @@ func (p *postgresForumRepository) UpdatePost(post models.Post, postUpdate models
 		row := p.Conn.QueryRow(`UPDATE post SET message=COALESCE(NULLIF($1, ''), message),
                              isEdited = CASE WHEN $1 = '' OR message = $1 THEN isEdited ELSE true END
                              WHERE id=$2 RETURNING *`, postUpdate.Message, post.ID)
-		err := row.Scan(&post.ID, &post.AuthorId, &post.Created, &post.Forum,  &post.IsEdited,
+		err := row.Scan(&post.ID, &post.Author, &post.Created, &post.Forum,  &post.IsEdited,
 			&post.Message, &post.Parent, &post.Thread, &post.Path)
 		if err != nil {
 			return post, err
 		}
-	post.Author = p.SelectNickById(post.AuthorId)
+	//post.Author = p.SelectNickById(post.AuthorId)
 	return post, nil
 }
 
@@ -312,12 +312,12 @@ func (p *postgresForumRepository) UpdatePost(post models.Post, postUpdate models
 func (p *postgresForumRepository) SelectPost(id int) (models.Post, error) {
 	var postModel models.Post
 	row := p.Conn.QueryRow(`Select id, author, created, forum, isEdited, message, parent, thread from post Where id=$1;`, id)
-	err := row.Scan(&postModel.ID, &postModel.AuthorId, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
+	err := row.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
 		&postModel.Message, &postModel.Parent, &postModel.Thread)
 	if err != nil {
 		return models.Post{}, models.ErrNotFound
 	}
-	postModel.Author = p.SelectNickById(postModel.AuthorId)
+	//postModel.Author = p.SelectNickById(postModel.AuthorId)
 	return postModel, nil
 }
 
@@ -500,12 +500,12 @@ func (p *postgresForumRepository) PostFlatSort(id int, parameters models.Paramet
 
 	for rows.Next() {
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.AuthorId, &post.Created, &post.Forum, &post.IsEdited, &post.Message, &post.Parent, &post.Thread)
+		err = rows.Scan(&post.ID, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Message, &post.Parent, &post.Thread)
 		if err != nil {
 			return posts, err
 		}
 
-		post.Author = p.SelectNickById(post.AuthorId)
+		//post.Author = p.SelectNickById(post.AuthorId)
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -544,12 +544,12 @@ func (p *postgresForumRepository) PostTreeSort(threadId int, parameters models.P
 
 	for rows.Next() {
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.AuthorId, &post.Created, &post.Forum, &post.IsEdited, &post.Message, &post.Parent, &post.Thread)
+		err = rows.Scan(&post.ID, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Message, &post.Parent, &post.Thread)
 		if err != nil {
 			return posts, err
 		}
 
-		post.Author = p.SelectNickById(post.AuthorId)
+		//post.Author = p.SelectNickById(post.AuthorId)
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -592,13 +592,13 @@ func (p *postgresForumRepository) PostParentTreeSort(threadId int, parameters mo
 
 	for rows.Next() {
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.AuthorId, &post.Created, &post.Forum, &post.IsEdited, &post.Message,
+		err = rows.Scan(&post.ID, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Message,
 			&post.Parent, &post.Thread)
 		if err != nil {
 			return posts, err
 		}
 
-		post.Author = p.SelectNickById(post.AuthorId)
+		//post.Author = p.SelectNickById(post.AuthorId)
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -656,12 +656,12 @@ func (p *postgresForumRepository) InsertPosts(posts []models.Post, thread models
 			i * 6 + 1, i * 6 + 2, i * 6 + 3, i * 6 + 4, i * 6 + 5, i * 6 + 6,
 		)
 
-		userId := p.SelectIdByNickname(post.Author)
+		//userId := p.SelectIdByNickname(post.Author)
 
 
 		query += value
 
-		values = append(values, userId)
+		values = append(values, post.Author)
 		values = append(values, created)
 		values = append(values, thread.Forum)
 		values = append(values, post.Message)
@@ -682,7 +682,7 @@ func (p *postgresForumRepository) InsertPosts(posts []models.Post, thread models
 
 	for rows.Next() {
 		var postModel models.Post
-		err := rows.Scan(&postModel.ID, &postModel.AuthorId, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
+		err := rows.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
 			&postModel.Message, &postModel.Parent, &postModel.Thread, &postModel.Path)
 		if err != nil {
 			fmt.Println("error of SCAN")
@@ -693,7 +693,7 @@ func (p *postgresForumRepository) InsertPosts(posts []models.Post, thread models
 			postModel.Parent.Int64 = 0
 			postModel.Parent.Valid = true
 		}
-		postModel.Author = p.SelectNicknameForum(postModel.AuthorId)
+		//postModel.Author = p.SelectNicknameForum(postModel.AuthorId)
 		postsResult = append(postsResult, postModel)
 	}
 

@@ -34,7 +34,8 @@ CREATE UNLOGGED TABLE post
 (
     id       BIGSERIAL PRIMARY KEY,
 --     Author   int REFERENCES "users" (id),
-    Author   int,
+--     Author   int,
+    Author citext,
     Created  timestamp with time zone default now(),
     Forum    citext,
     isEdited BOOLEAN                  DEFAULT FALSE,
@@ -78,11 +79,8 @@ $update_vote$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION updatePostUserForum() RETURNS TRIGGER AS
 $update_forum_post$
-DECLARE
-    author_nick citext;
 BEGIN
-    SELECT Nickname FROM users WHERE id = new.Author INTO author_nick;
-    INSERT INTO users_forum (nickname, Slug) VALUES (author_nick, NEW.forum) on conflict do nothing;
+    INSERT INTO users_forum (nickname, Slug) VALUES (New.Author, NEW.forum) on conflict do nothing;
     return NEW;
 end
 $update_forum_post$ LANGUAGE plpgsql;
