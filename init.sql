@@ -33,8 +33,6 @@ CREATE UNLOGGED TABLE thread
 CREATE UNLOGGED TABLE post
 (
     id       BIGSERIAL PRIMARY KEY,
---     Author   int REFERENCES "users" (id),
---     Author   int,
     Author citext,
     Created  timestamp with time zone default now(),
     Forum    citext,
@@ -43,9 +41,9 @@ CREATE UNLOGGED TABLE post
     Parent   BIGINT                   DEFAULT 0,
     Thread   INT,
     Path     BIGINT[]                 DEFAULT ARRAY []::INTEGER[],
-    FOREIGN KEY (forum) REFERENCES "forum" (slug),
+--     FOREIGN KEY (forum) REFERENCES "forum" (slug),
     FOREIGN KEY (thread) REFERENCES "thread" (id)
---     FOREIGN KEY (parent) REFERENCES "post" (id)
+
 );
 
 CREATE UNLOGGED TABLE votes
@@ -193,7 +191,11 @@ CREATE INDEX forum_index ON forum (Slug);
 CREATE INDEX votes_index ON votes (Author, Thread);
 
 
-CREATE INDEX thread_created_index ON thread (Created)
+CREATE INDEX thread_created_index ON thread (Created);
+
+ANALYZE post;
+ANALYZE users_forum;
+ANALYZE thread;
 
 
 

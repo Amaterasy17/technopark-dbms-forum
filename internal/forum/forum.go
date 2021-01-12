@@ -58,4 +58,6 @@ type ForumRepository interface {
 	Rollback(tx *pgx.Tx)
 	InsertPosts(posts []models.Post, thread models.Thread) ([]models.Post, error)
 	SelectNickById(userId int) string
+	AutocommitOff()
+	AutocommitOn()
 }

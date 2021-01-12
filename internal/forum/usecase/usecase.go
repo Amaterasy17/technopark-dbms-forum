@@ -152,11 +152,17 @@ func (f *ForumUsecase) CreatePosts(posts []models.Post, thread models.Thread) ([
 		fmt.Println(err)
 		if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23503" {
 						fmt.Println(err)
-						tx.Rollback()
+						err = tx.Rollback()
+						if err != nil {
+							fmt.Println("CHEGOOOOOOO")
+						}
 						return nil, models.ErrNotFound
 		} else {
 			fmt.Println(err)
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				fmt.Println("CHEGOOOOOOO")
+			}
 			return nil, models.ErrConflict
 		}
 	}

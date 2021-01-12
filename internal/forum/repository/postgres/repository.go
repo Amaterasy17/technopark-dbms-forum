@@ -182,6 +182,7 @@ func (p *postgresForumRepository) SelectThreadById(id int) (models.Thread, error
 	var thread models.Thread
 	row := p.Conn.QueryRow(`Select id, title, author, forum, message, votes, slug, created from thread
 							Where id=$1 LIMIT 1;`, id)
+
 	err := row.Scan(&thread.Id, &thread.Title, &thread.AuthorId, &thread.Forum, &thread.Message, &thread.Votes,
 		&thread.Slug, &thread.Created)
 	if err != nil {
@@ -718,4 +719,12 @@ func (p *postgresForumRepository) SelectIdByNickname(nick string) int {
 		fmt.Println(err)
 	}
 	return result
+}
+
+func (p *postgresForumRepository) AutocommitOff() {
+	p.Conn.QueryRow(`SET autocommit TO 'off';`)
+}
+
+func (p *postgresForumRepository) AutocommitOn() {
+	p.Conn.QueryRow(`SET autocommit TO 'on';`)
 }
