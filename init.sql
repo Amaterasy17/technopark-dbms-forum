@@ -121,7 +121,7 @@ $update_vote$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION updateCountOfThreads() RETURNS TRIGGER AS
 $update_forum$
 BEGIN
-    UPDATE forum SET Threads=(Threads+1) WHERE LOWER(slug)=LOWER(NEW.forum);
+    UPDATE forum SET Threads=(Threads+1) WHERE slug=NEW.forum;
     return NEW;
 end
 $update_forum$ LANGUAGE plpgsql;
@@ -144,7 +144,7 @@ BEGIN
 
         NEW.path := NEW.path || parentPath || new.id;
     end if;
-    UPDATE forum SET Posts=Posts + 1 WHERE lower(forum.slug) = lower(new.forum);
+    UPDATE forum SET Posts=Posts + 1 WHERE forum.slug = new.forum;
     RETURN new;
 end
 $update_path$ LANGUAGE plpgsql;
