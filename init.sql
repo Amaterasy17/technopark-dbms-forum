@@ -195,6 +195,7 @@ EXECUTE PROCEDURE updateThreadUserForum();
 Create index thread_slug_hash_index ON thread using hash (slug);
 CREATE INDEX thread_id_forum_index ON thread (id, forum);
 CREATE INDEX thread_created_index ON thread (created);
+CREATE INDEX thread_forum_lower_index ON thread (forum);
 
 
 CREATE INDEX forum_index ON forum (Slug);
@@ -205,19 +206,23 @@ CREATE INDEX votes_index ON votes (Author, Thread);
 CREATE INDEX users_forum_forum_index ON users_forum ((users_forum.Slug));
 CREATE INDEX thread_created_index ON thread (Created);
 
-CREATE INDEX post_first_parent_thread_index ON post ((post.path[1]), thread);
-CREATE INDEX post_first_parent_id_index ON post ((post.path[1]), id);
+CREATE INDEX post_first_parent_thread_index ON post (thread, (post.path[1]) );
+CREATE INDEX post_first_parent_id_index ON post (id, (post.path[1]));
 CREATE INDEX post_first_parent_index ON post ((post.path[1]));
 CREATE INDEX post_path_index ON post ((post.path));
-CREATE INDEX post_thread_id_index ON post (thread, id); -- +
+CREATE INDEX post_thread_id_index ON post (thread, id);
+CREATE INDEX post_path_id_index ON post (id, (post.path));
+CREATE INDEX post_thread_path_id_index ON post (thread, (post.parent), id);
 
 
 
 CREATE INDEX users_nickname_index ON users ((users.Nickname));
+CREATE INDEX users_email_index ON users (Email);
 
 
 CREATE INDEX users_forum_forum_user_index ON users_forum ((users_forum.slug), nickname);
 CREATE INDEX users_forum_user_index ON users_forum (nickname);
+CREATE INDEX users_forum_forum_index ON users_forum ((users_forum.Slug));
 
 ANALYZE post;
 ANALYZE users_forum;
