@@ -1,5 +1,17 @@
 CREATE EXTENSION IF NOT EXISTS citext;
 
+ALTER SYSTEM SET
+    checkpoint_completion_target = '0.9';
+ALTER SYSTEM SET
+    wal_buffers = '6912kB';
+ALTER SYSTEM SET
+    default_statistics_target = '100';
+ALTER SYSTEM SET
+    random_page_cost = '1.1';
+ALTER SYSTEM SET
+    effective_io_concurrency = '200';
+
+
 CREATE UNLOGGED TABLE users
 (
     Id       Serial PRIMARY KEY,

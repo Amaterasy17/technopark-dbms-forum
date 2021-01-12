@@ -157,18 +157,13 @@ func (p *postgresForumRepository) SelectThreadBySlug(slug string) (models.Thread
 
 func (p *postgresForumRepository) InsertThread(thread models.Thread) (models.Thread,error) {
 	var newThread models.Thread
-	var vremya time.Time
 	var row *pgx.Row
-	if thread.Created == vremya {
-		row = p.Conn.QueryRow(	`Insert INTO thread(Title, Author, Forum, Message, slug, Votes)
-							VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`, thread.Title, thread.AuthorId, thread.Forum,
-			thread.Message, thread.Slug, thread.Votes)
-	} else {
-		row = p.Conn.QueryRow(	`Insert INTO thread(Title, Author, Created, Forum, Message, slug, Votes)
+
+	row = p.Conn.QueryRow(	`Insert INTO thread(Title, Author, Created, Forum, Message, slug, Votes)
 							VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`, thread.Title, thread.AuthorId, thread.Created,
 							thread.Forum,
 			thread.Message, thread.Slug, thread.Votes)
-	}
+
 	err := row.Scan(&newThread.Id,&newThread.Title, &newThread.AuthorId, &newThread.Created,
 		&newThread.Forum, &newThread.Message, &newThread.Slug, &newThread.Votes)
 	if err != nil {
@@ -720,6 +715,74 @@ func (p *postgresForumRepository) InsertPosts(posts *[]models.Post, thread model
 	//}
 
 	return posts, err
+	//query := `INSERT INTO post(
+    //             author,
+    //             created,
+    //             message,
+    //             parent,
+	//			 thread,
+	//			 forum) VALUES `
+	//data := make([]models.Post, 0, 0)
+	//if len(*posts) == 0 {
+	//	return &data, nil
+	//}
+	//
+	//slug := thread.Forum
+	//
+	//
+	//timeCreated := time.Now()
+	//var valuesNames []string
+	//var values []interface{}
+	//i := 1
+	//for _, element := range *posts {
+	//	valuesNames = append(valuesNames, fmt.Sprintf(
+	//		"($%d, $%d, $%d, nullif($%d, 0), $%d, $%d)",
+	//		i, i+1, i+2, i+3, i+4, i+5))
+	//	i += 6
+	//	values = append(values, element.Author, timeCreated, element.Message, element.Parent, thread.Id, slug)
+	//}
+	//
+	//query += strings.Join(valuesNames[:], ",")
+	//query += " RETURNING *"
+	//row, err := p.Conn.Query(query, values...)
+	//
+	//if err != nil {
+	//	return &data, err
+	//}
+	//defer func() {
+	//	if row != nil {
+	//		row.Close()
+	//	}
+	//}()
+	//
+	//for row.Next() {
+	//
+	//	var post models.Post
+	//
+	//
+	//	err = row.Scan(&post.ID, &post.Author, &post.Created, &post.Forum,  &post.IsEdited,
+	//		&post.Message, &post.Parent, &post.Thread, &post.Path)
+	//
+	//	if err != nil {
+	//		return &data, err
+	//	}
+	//
+	//	data = append(data, post)
+	//
+	//}
+	//
+	//if row.Err() != nil {
+	//	//
+	//		return nil, row.Err()
+	//	//	//switch rows.Err().(pgx.PgError).Code {
+	//	//	//case "23503":
+	//	//	//	return nil, models.ErrNotFound
+	//	//	//default:
+	//	//	//	return nil, models.ErrConflict
+	//	//	//}
+	//	}
+	//
+	//return &data, err
 }
 
 func (p *postgresForumRepository) SelectNickById(userId int) string {
