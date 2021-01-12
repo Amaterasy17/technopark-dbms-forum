@@ -188,8 +188,7 @@ CREATE TRIGGER thread_insert_user_forum
     FOR EACH ROW
 EXECUTE PROCEDURE updateThreadUserForum();
 
-CREATE INDEX post_path_index ON post ((post.path));
-CREATE INDEX post_first_parent_index ON post ((post.path[1]));
+
 
 
 
@@ -205,6 +204,20 @@ CREATE INDEX votes_index ON votes (Author, Thread);
 
 CREATE INDEX users_forum_forum_index ON users_forum ((users_forum.Slug));
 CREATE INDEX thread_created_index ON thread (Created);
+
+CREATE INDEX post_first_parent_thread_index ON post ((post.path[1]), thread);
+CREATE INDEX post_first_parent_id_index ON post ((post.path[1]), id);
+CREATE INDEX post_first_parent_index ON post ((post.path[1]));
+CREATE INDEX post_path_index ON post ((post.path));
+CREATE INDEX post_thread_id_index ON post (thread, id); -- +
+
+
+
+CREATE INDEX users_nickname_index ON users ((users.Nickname));
+
+
+CREATE INDEX users_forum_forum_user_index ON users_forum ((users_forum.slug), nickname);
+CREATE INDEX users_forum_user_index ON users_forum (nickname);
 
 ANALYZE post;
 ANALYZE users_forum;
