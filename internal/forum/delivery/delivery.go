@@ -58,7 +58,7 @@ func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
 	forum := models.Forum{}
 	err := json.NewDecoder(r.Body).Decode(&forum)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -66,12 +66,12 @@ func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
 	forum, err = f.ForumUseCase.Forum(forum)
 	status := models.GetStatusCodePost(err)
 	if status == 409 {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodePost(err))
 
 		body, err := json.Marshal(forum)
 		if err != nil {
-			fmt.Println(err)
+
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(JSONError(err.Error()))
 			return
@@ -81,7 +81,7 @@ func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -89,7 +89,7 @@ func (f *ForumHandler) Forum(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(forum)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -108,7 +108,7 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	var thread models.Thread
 	err := json.NewDecoder(r.Body).Decode(&thread)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -120,12 +120,12 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	thread, err = f.ForumUseCase.CreatingThread(thread)
  	status := models.GetStatusCodePost(err)
  	if status == 409 {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodePost(err))
 
 		body, err := json.Marshal(thread)
 		if err != nil {
-			fmt.Println(err)
+
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(JSONError(err.Error()))
 			return
@@ -136,7 +136,7 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -155,7 +155,7 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 		}
 		body, err := json.Marshal(threadOut)
 		if err != nil {
-			fmt.Println(err)
+
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(JSONError(err.Error()))
 			return
@@ -168,7 +168,7 @@ func (f *ForumHandler) CreateThread(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(thread)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -185,7 +185,7 @@ func (f *ForumHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -194,11 +194,11 @@ func (f *ForumHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	users, err := f.ForumUseCase.CreateUser(user)
 	status := models.GetStatusCodePost(err)
-	fmt.Println(status)
+
 	if status == 409 {
 		body, err := json.Marshal(users)
 		if err != nil {
-			fmt.Println(err)
+
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(JSONError(err.Error()))
 			return
@@ -210,7 +210,7 @@ func (f *ForumHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if status == 201 {
 		body, err := json.Marshal(users[0])
 		if err != nil {
-			fmt.Println(err)
+
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(JSONError(err.Error()))
 			return
@@ -223,14 +223,13 @@ func (f *ForumHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (f *ForumHandler) ProfileUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Println("get profile user")
 	nickname := strings.TrimPrefix(r.URL.Path, "/api/user/")
 	nickname = strings.TrimSuffix(nickname, "/profile")
-	fmt.Println(nickname)
+
 
 	user, err := f.ForumUseCase.GetUser(nickname)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -238,7 +237,7 @@ func (f *ForumHandler) ProfileUser(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(user)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -253,12 +252,12 @@ func (f *ForumHandler) ChangeProfileInformation(w http.ResponseWriter, r *http.R
 	fmt.Println("change profile user")
 	nickname := strings.TrimPrefix(r.URL.Path, "/api/user/")
 	nickname = strings.TrimSuffix(nickname, "/profile")
-	fmt.Println(nickname)
+
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -267,7 +266,7 @@ func (f *ForumHandler) ChangeProfileInformation(w http.ResponseWriter, r *http.R
 
 	userModel, err := f.ForumUseCase.ChangeUserProfile(user)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -275,7 +274,7 @@ func (f *ForumHandler) ChangeProfileInformation(w http.ResponseWriter, r *http.R
 
 	body, err := json.Marshal(userModel)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -293,7 +292,7 @@ func (f *ForumHandler) ForumInfo(w http.ResponseWriter, r *http.Request) {
 
 	forum, err := f.ForumUseCase.ForumDetails(slug)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -301,7 +300,7 @@ func (f *ForumHandler) ForumInfo(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(forum)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -319,7 +318,7 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	thread, err := f.ForumUseCase.ThreadDetails(slug)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodePost(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -329,7 +328,7 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	var posts []models.Post
 	err = json.NewDecoder(r.Body).Decode(&posts)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -346,18 +345,18 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	//	err = pgx.ErrNoRows
 	//}
 	if err != nil {
-		fmt.Println(err)
+
 		//if err == pgx.ErrNoRows {
 		//	//_, err = f.ForumUseCase.ThreadDetails(slug)
 		//	//if err != nil {
-		//	//	fmt.Println(err)
+		//	//
 		//	//	w.WriteHeader(models.GetStatusCodePost(err))
 		//	//	w.Write(JSONError(err.Error()))
 		//	//	return
 		//	//}
 		//	_, err = f.ForumUseCase.GetUser(author)
 		//	if err != nil {
-		//		fmt.Println(err)
+		//
 		//		w.WriteHeader(models.GetStatusCodePost(err))
 		//		w.Write(JSONError(err.Error()))
 		//		return
@@ -376,7 +375,7 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(*newPosts)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -388,14 +387,14 @@ func (f *ForumHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 func (f *ForumHandler) ThreadDetails(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Println("thread details")
+
 	slug := strings.TrimPrefix(r.URL.Path, "/api/thread/")
 	slug = strings.TrimSuffix(slug, "/details")
-	fmt.Println(slug)
+
 
 	thread, err := f.ForumUseCase.ThreadDetails(slug)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -405,7 +404,7 @@ func (f *ForumHandler) ThreadDetails(w http.ResponseWriter, r *http.Request) {
 		result := models.ThreadToThreadOut(thread)
 		body, err := json.Marshal(result)
 		if err != nil {
-			fmt.Println(err)
+
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(JSONError(err.Error()))
 			return
@@ -418,7 +417,7 @@ func (f *ForumHandler) ThreadDetails(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(thread)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -433,7 +432,7 @@ func (f *ForumHandler) StatusDB(w http.ResponseWriter, r *http.Request) {
 	status := f.ForumUseCase.StatusDB()
 	body, err := json.Marshal(status)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -447,7 +446,7 @@ func (f *ForumHandler) ClearDB(w http.ResponseWriter, r *http.Request)  {
 	w.Header().Set("Content-Type", "application/json")
 	err := f.ForumUseCase.ClearDB()
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -463,7 +462,7 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 
 	thread, err := f.ForumUseCase.ThreadDetails(slug)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -472,7 +471,7 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 	var vote models.Vote
 	err = json.NewDecoder(r.Body).Decode(&vote)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -480,7 +479,7 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 
 	thread, err = f.ForumUseCase.MakeVote(vote, thread)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -493,7 +492,7 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 		result := models.ThreadToThreadOut(thread)
 		body, err := json.Marshal(result)
 		if err != nil {
-			fmt.Println(err)
+
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(JSONError(err.Error()))
 			return
@@ -506,7 +505,7 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 
 	body, err := json.Marshal(thread)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -522,7 +521,7 @@ func (f *ForumHandler) PostUpdate(w http.ResponseWriter, r *http.Request) {
 	slug = strings.TrimSuffix(slug, "/details")
 	id, err := strconv.Atoi(slug)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(400)
 		w.Write(JSONError(err.Error()))
 		return
@@ -531,7 +530,7 @@ func (f *ForumHandler) PostUpdate(w http.ResponseWriter, r *http.Request) {
 	var postUpdate models.PostUpdate
 	err = json.NewDecoder(r.Body).Decode(&postUpdate)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -539,7 +538,7 @@ func (f *ForumHandler) PostUpdate(w http.ResponseWriter, r *http.Request) {
 
 	post, err := f.ForumUseCase.UpdateMessagePost(postUpdate)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodePost(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -547,7 +546,7 @@ func (f *ForumHandler) PostUpdate(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(post)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -559,13 +558,11 @@ func (f *ForumHandler) PostUpdate(w http.ResponseWriter, r *http.Request) {
 
 func (f *ForumHandler) PostDetails(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Println("post details")
 	slug := strings.TrimPrefix(r.URL.Path, "/api/post/")
 	slug = strings.TrimSuffix(slug, "/details")
-	fmt.Println(slug)
 	id, err := strconv.Atoi(slug)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(400)
 		w.Write(JSONError(err.Error()))
 		return
@@ -575,7 +572,7 @@ func (f *ForumHandler) PostDetails(w http.ResponseWriter, r *http.Request) {
 
 	postFull, err := f.ForumUseCase.PostFullDetails(id, related)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -584,7 +581,7 @@ func (f *ForumHandler) PostDetails(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(postFull)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -595,7 +592,7 @@ func (f *ForumHandler) PostDetails(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) ThreadsOfForum(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("threads of forum")
+
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -615,12 +612,12 @@ func (f *ForumHandler) ThreadsOfForum(w http.ResponseWriter, r *http.Request) {
 
 	slug := strings.TrimPrefix(r.URL.Path, "/api/forum/")
 	slug = strings.TrimSuffix(slug, "/threads")
-	fmt.Println(slug)
+
 
 
 	threads, err := f.ForumUseCase.ListThreads(slug, params)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -639,7 +636,7 @@ func (f *ForumHandler) ThreadsOfForum(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(result)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -654,7 +651,7 @@ func (f *ForumHandler) ThreadsOfForum(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *ForumHandler) UsersOfForum(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("users of forum")
+
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -674,11 +671,11 @@ func (f *ForumHandler) UsersOfForum(w http.ResponseWriter, r *http.Request) {
 
 	slug := strings.TrimPrefix(r.URL.Path, "/api/forum/")
 	slug = strings.TrimSuffix(slug, "/users")
-	fmt.Println(slug)
+
 
 	users, err := f.ForumUseCase.GetUsersByForum(slug, params)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -686,7 +683,7 @@ func (f *ForumHandler) UsersOfForum(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(users)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -703,7 +700,7 @@ func (f *ForumHandler) UsersOfForum(w http.ResponseWriter, r *http.Request) {
 
 
 func (f *ForumHandler) PostsOfThread(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("posts of forum")
+
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -724,11 +721,11 @@ func (f *ForumHandler) PostsOfThread(w http.ResponseWriter, r *http.Request) {
 
 	slug := strings.TrimPrefix(r.URL.Path, "/api/thread/")
 	slug = strings.TrimSuffix(slug, "/posts")
-	fmt.Println(slug)
+
 
 	thread, err := f.ForumUseCase.ThreadDetails(slug)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -736,7 +733,7 @@ func (f *ForumHandler) PostsOfThread(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := f.ForumUseCase.GetPostsOfThread(thread.Id, params, sort)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -744,7 +741,7 @@ func (f *ForumHandler) PostsOfThread(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(posts)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(JSONError(err.Error()))
 		return
@@ -766,7 +763,7 @@ func (f *ForumHandler) UpdateThread(w http.ResponseWriter, r *http.Request) {
 	var thread models.Thread
 	err := json.NewDecoder(r.Body).Decode(&thread)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -781,7 +778,7 @@ func (f *ForumHandler) UpdateThread(w http.ResponseWriter, r *http.Request) {
 
 	thread, err = f.ForumUseCase.UpdateThread(thread)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
@@ -791,7 +788,7 @@ func (f *ForumHandler) UpdateThread(w http.ResponseWriter, r *http.Request) {
 		result := models.ThreadToThreadOut(thread)
 		body, err := json.Marshal(result)
 		if err != nil {
-			fmt.Println(err)
+
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(JSONError(err.Error()))
 			return
@@ -805,7 +802,7 @@ func (f *ForumHandler) UpdateThread(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(thread)
 	if err != nil {
-		fmt.Println(err)
+
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return

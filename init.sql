@@ -188,41 +188,41 @@ CREATE TRIGGER thread_insert_user_forum
     FOR EACH ROW
 EXECUTE PROCEDURE updateThreadUserForum();
 
-
-
-
-
-Create index thread_slug_hash_index ON thread using hash (slug);
-CREATE INDEX thread_id_forum_index ON thread (id, forum);
-CREATE INDEX thread_created_index ON thread (created);
-CREATE INDEX thread_forum_lower_index ON thread (forum);
-
-
-CREATE INDEX forum_index ON forum (Slug);
-
-
-CREATE INDEX votes_index ON votes (Author, Thread);
-
-CREATE INDEX users_forum_forum_index ON users_forum ((users_forum.Slug));
-CREATE INDEX thread_created_index ON thread (Created);
-
-CREATE INDEX post_first_parent_thread_index ON post (thread, (post.path[1]) );
+CREATE INDEX post_parent_thread_index ON post (id DESC, thread, parent) WHERE parent IS NULL;
+CREATE INDEX post_parent_thread_index_desc ON post (id ASC, thread, parent) WHERE parent IS NULL;
+CREATE INDEX post_first_parent_thread_index ON post (id DESC, thread, parent, (post.path[1])) WHERE parent IS NULL;
+CREATE INDEX post_first_parent_thread_index_desc ON post (id ASC, thread, parent, (post.path[1])) WHERE parent IS NULL;
 CREATE INDEX post_first_parent_id_index ON post (id, (post.path[1]));
 CREATE INDEX post_first_parent_index ON post ((post.path[1]));
 CREATE INDEX post_path_index ON post ((post.path));
-CREATE INDEX post_thread_id_index ON post (thread, id);
-CREATE INDEX post_path_id_index ON post (id, (post.path));
-CREATE INDEX post_thread_path_id_index ON post (thread, (post.parent), id);
+CREATE INDEX post_thread_index ON post (thread);
+CREATE INDEX post_id_path_index ON post (id, path);
+CREATE INDEX post_thread_id_index_desc ON post (id DESC, thread); -- +
+CREATE INDEX post_thread_id_index_asc ON post (id ASC, thread); -- +
+CREATE INDEX post_thread_id_path_index_asc ON post (path ASC, id ASC, thread); -- +
+CREATE INDEX post_thread_id_path_index_desc ON post (path DESC, id ASC, thread);
 
 
 
-CREATE INDEX users_nickname_index ON users ((users.Nickname));
-CREATE INDEX users_email_index ON users (Email);
+CREATE INDEX users_nickname_email_index ON users (nickname, email);
+CREATE INDEX users_nickname_all_index ON users (nickname ASC, email, fullname, about);
+CREATE INDEX users_nickname_all_index_desc ON users (nickname DESC, email, fullname, about);
+
+CREATE INDEX users_forum_user_index ON users_forum using hash (nickname);
+CREATE INDEX users_forum_slug_index ON users_forum using hash (slug);
+
+CREATE INDEX thread_slug_id_index ON thread (id, slug);
+CREATE INDEX thread_id_index ON thread using hash (slug);
+CREATE INDEX thread_id_forum_index ON thread (id, forum);
+CREATE INDEX thread_forum_lower_index ON thread (forum);
+CREATE INDEX thread_forum_created_order_index ON thread (forum, created DESC);
+CREATE INDEX thread_created_index ON thread (created);
+CREATE INDEX thread_forum_created_order_index_DESC ON thread (forum, created ASC);
 
 
-CREATE INDEX users_forum_forum_user_index ON users_forum ((users_forum.slug), nickname);
-CREATE INDEX users_forum_user_index ON users_forum (nickname);
-CREATE INDEX users_forum_forum_index ON users_forum ((users_forum.Slug));
+CREATE INDEX vote_nickname ON votes (Author, Thread);
+
+
 
 ANALYZE post;
 ANALYZE users_forum;
