@@ -197,6 +197,7 @@ CREATE INDEX post_first_parent_index ON post ((post.path[1]));
 CREATE INDEX post_path_index ON post ((post.path));
 CREATE INDEX post_thread_index ON post (thread);
 CREATE INDEX post_id_path_index ON post (id, path);
+CREATE INDEX post_path_id_index ON post (path, id);
 CREATE INDEX post_thread_id_index_desc ON post (id DESC, thread); -- +
 CREATE INDEX post_thread_id_index_asc ON post (id ASC, thread); -- +
 CREATE INDEX post_thread_id_path_index_asc ON post (path ASC, id ASC, thread); -- +
@@ -213,8 +214,10 @@ CLUSTER users using users_nickname_all_index;
 CREATE UNIQUE INDEX users_nickname_all_index_desc ON users (nickname DESC, email, fullname, about);
 
 
+
 CREATE INDEX users_forum_user_index ON users_forum using hash (nickname);
 CREATE INDEX users_forum_slug_index ON users_forum using hash (slug);
+CREATE INDEX users_forum_nickname_slug On users_forum (nickname, slug);
 
 CREATE INDEX thread_slug_id_index ON thread (id, slug);
 CREATE INDEX thread_id_index ON thread using hash (slug);
