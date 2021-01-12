@@ -188,8 +188,8 @@ CREATE TRIGGER thread_insert_user_forum
     FOR EACH ROW
 EXECUTE PROCEDURE updateThreadUserForum();
 
-CREATE INDEX post_parent_thread_index ON post (id DESC, thread, parent) WHERE parent IS NULL;
-CREATE INDEX post_parent_thread_index_desc ON post (id ASC, thread, parent) WHERE parent IS NULL;
+CREATE INDEX post_parent_thread_index ON post (id DESC, thread, parent);
+CREATE INDEX post_parent_thread_index_desc ON post (id ASC, thread, parent);
 CREATE INDEX post_first_parent_thread_index ON post (id DESC, thread, parent, (post.path[1])) WHERE parent IS NULL;
 CREATE INDEX post_first_parent_thread_index_desc ON post (id ASC, thread, parent, (post.path[1])) WHERE parent IS NULL;
 CREATE INDEX post_first_parent_id_index ON post (id, (post.path[1]));
@@ -208,7 +208,7 @@ CREATE INDEX post_thread_id_path_index_desc ON post (path DESC, id ASC, thread);
 CREATE INDEX users_nickname_email_index ON users (nickname, email);
 CREATE INDEX users_nickname_all_index ON users (nickname ASC, email, fullname, about);
 CREATE INDEX users_nickname_all_index_desc ON users (nickname DESC, email, fullname, about);
-CREATE INDEX users_nickname_email_index ON users (nickname, email);
+CREATE INDEX users_email_index ON users (email);
 CREATE UNIQUE INDEX users_nickname_all_index ON users (nickname ASC, email, fullname, about);
 CLUSTER users using users_nickname_all_index;
 CREATE UNIQUE INDEX users_nickname_all_index_desc ON users (nickname DESC, email, fullname, about);
@@ -226,8 +226,6 @@ CREATE INDEX thread_forum_lower_index ON thread (forum);
 CREATE INDEX thread_forum_created_order_index ON thread (forum, created DESC);
 CREATE INDEX thread_created_index ON thread (created);
 CREATE INDEX thread_forum_created_order_index_DESC ON thread (forum, created ASC);
-
-
 CREATE INDEX vote_nickname ON votes (Author, Thread);
 
 CREATE INDEX forum_fk_index ON forum ("user");
