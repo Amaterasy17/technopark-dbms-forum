@@ -207,6 +207,11 @@ CREATE INDEX post_thread_id_path_index_desc ON post (path DESC, id ASC, thread);
 CREATE INDEX users_nickname_email_index ON users (nickname, email);
 CREATE INDEX users_nickname_all_index ON users (nickname ASC, email, fullname, about);
 CREATE INDEX users_nickname_all_index_desc ON users (nickname DESC, email, fullname, about);
+CREATE INDEX users_nickname_email_index ON users (nickname, email);
+CREATE UNIQUE INDEX users_nickname_all_index ON users (nickname ASC, email, fullname, about);
+CLUSTER users using users_nickname_all_index;
+CREATE UNIQUE INDEX users_nickname_all_index_desc ON users (nickname DESC, email, fullname, about);
+
 
 CREATE INDEX users_forum_user_index ON users_forum using hash (nickname);
 CREATE INDEX users_forum_slug_index ON users_forum using hash (slug);
@@ -221,6 +226,11 @@ CREATE INDEX thread_forum_created_order_index_DESC ON thread (forum, created ASC
 
 
 CREATE INDEX vote_nickname ON votes (Author, Thread);
+
+CREATE INDEX forum_fk_index ON forum ("user");
+CREATE INDEX thread_fk_index ON thread (author);
+CREATE INDEX post_fk_forum_index ON post (forum);
+CREATE INDEX post_fk_parent_index ON post (parent);
 
 
 
