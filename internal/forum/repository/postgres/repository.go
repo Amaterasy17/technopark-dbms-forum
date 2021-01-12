@@ -646,12 +646,12 @@ func (p *postgresForumRepository) Rollback(tx *pgx.Tx) {
 	p.Rollback(tx)
 }
 
-func (p *postgresForumRepository) InsertPosts(posts []models.Post, thread models.Thread) ([]models.Post, error) {
+func (p *postgresForumRepository) InsertPosts(posts *[]models.Post, thread models.Thread) (*[]models.Post, error) {
 	query := `INSERT INTO post(author, created, forum, message, parent, thread) VALUES`
 
 	var values []interface{}
 	created := time.Now()
-	for i, post := range posts {
+	for i, post := range *posts {
 		value := fmt.Sprintf(
 			"($%d, $%d, $%d, $%d, $%d, $%d),",
 			i * 6 + 1, i * 6 + 2, i * 6 + 3, i * 6 + 4, i * 6 + 5, i * 6 + 6,
@@ -671,7 +671,7 @@ func (p *postgresForumRepository) InsertPosts(posts []models.Post, thread models
 	}
 
 	query = strings.TrimSuffix(query, ",")
-	query += ` RETURNING *`
+	query += ` RETURNING id, created, forum, isEdited, thread;`
 
 	rows, err := p.Conn.Query(query, values...)
 	if err != nil {
@@ -679,26 +679,47 @@ func (p *postgresForumRepository) InsertPosts(posts []models.Post, thread models
 		return nil, err
 	}
 	defer rows.Close()
-	var postsResult []models.Post
+	//var postsResult []models.Post
 
-	for rows.Next() {
-		var postModel models.Post
-		err := rows.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
-			&postModel.Message, &postModel.Parent, &postModel.Thread, &postModel.Path)
-		if err != nil {
-			fmt.Println("error of SCAN")
-			return nil, err
+	for i, _ := range *posts {
+		if rows.Next() {
+			err := rows.Scan(&(*posts)[i].ID, &(*posts)[i].Created, &(*posts)[i].Forum, &(*posts)[i].IsEdited, &(*posts)[i].Thread)
+			if err != nil {
+				fmt.Println(err)
+				return nil, models.ErrConflict
+			}
 		}
+	}
+	if rows.Err() != nil {
 
-		if !postModel.Parent.Valid {
-			postModel.Parent.Int64 = 0
-			postModel.Parent.Valid = true
-		}
-		//postModel.Author = p.SelectNicknameForum(postModel.AuthorId)
-		postsResult = append(postsResult, postModel)
+		return nil, rows.Err()
+		//switch rows.Err().(pgx.PgError).Code {
+		//case "23503":
+		//	return nil, models.ErrNotFound
+		//default:
+		//	return nil, models.ErrConflict
+		//}
 	}
 
-	return postsResult, err
+	//fmt.Println(*posts)
+	//for rows.Next() {
+	//	var postModel models.Post
+	//	err := rows.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
+	//		&postModel.Message, &postModel.Parent, &postModel.Thread, &postModel.Path)
+	//	if err != nil {
+	//		fmt.Println("error of SCAN")
+	//		return nil, err
+	//	}
+	//
+	//	if !postModel.Parent.Valid {
+	//		postModel.Parent.Int64 = 0
+	//		postModel.Parent.Valid = true
+	//	}
+	//	//postModel.Author = p.SelectNicknameForum(postModel.AuthorId)
+	//	postsResult = append(postsResult, postModel)
+	//}
+
+	return posts, err
 }
 
 func (p *postgresForumRepository) SelectNickById(userId int) string {

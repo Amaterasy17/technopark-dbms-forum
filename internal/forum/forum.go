@@ -12,7 +12,7 @@ type ForumUseCase interface {
 	ChangeUserProfile(user models.User) (models.User, error)
 	ForumDetails(slug string) (models.Forum, error)
 	CreatingThread(thread models.Thread) (models.Thread, error)
-	CreatePosts(posts []models.Post, thread models.Thread) ([]models.Post, error)
+	CreatePosts(posts *[]models.Post, thread models.Thread) (*[]models.Post, error)
 	ThreadDetails(slug string) (models.Thread, error)
 	StatusDB() models.Status
 	ClearDB() error
@@ -56,7 +56,7 @@ type ForumRepository interface {
 	UpdateThread(thread models.Thread) (models.Thread, error)
 	NewTransaction() (*pgx.Tx, error)
 	Rollback(tx *pgx.Tx)
-	InsertPosts(posts []models.Post, thread models.Thread) ([]models.Post, error)
+	InsertPosts(posts *[]models.Post, thread models.Thread) (*[]models.Post, error)
 	SelectNickById(userId int) string
 	AutocommitOff()
 	AutocommitOn()

@@ -177,12 +177,13 @@ CREATE TRIGGER thread_insert_user_forum
 EXECUTE PROCEDURE updateThreadUserForum();
 
 CREATE INDEX post_path_index ON post ((post.path));
+CREATE INDEX post_first_parent_index ON post ((post.path[1]));
 
 
 
-
-CREATE INDEX thread_id_hash_index ON thread using hash (id);
 Create index thread_slug_hash_index ON thread using hash (slug);
+CREATE INDEX thread_id_forum_index ON thread (id, forum);
+CREATE INDEX thread_created_index ON thread (created);
 
 
 CREATE INDEX forum_index ON forum (Slug);
@@ -190,7 +191,7 @@ CREATE INDEX forum_index ON forum (Slug);
 
 CREATE INDEX votes_index ON votes (Author, Thread);
 
-
+CREATE INDEX users_forum_forum_index ON users_forum ((users_forum.Slug));
 CREATE INDEX thread_created_index ON thread (Created);
 
 ANALYZE post;
