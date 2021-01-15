@@ -63,7 +63,7 @@ func (p *postgresForumRepository) CheckForum(forum models.Forum) (models.Forum, 
 
 func (p *postgresForumRepository) SelectUsers(user models.User) ([]models.User, error) {
 	var users []models.User
-	rows, err := p.Conn.Query(`Select Nickname, FullName, About, Email From users Where Nickname=$1 or Email=$2;`,
+	rows, err := p.Conn.Query(`Select Nickname, FullName, About, Email From users Where Nickname=$1 or Email=$2 LIMIT 2;`,
 														user.Nickname, user.Email)
 	defer rows.Close()
 	if err != nil {
@@ -104,7 +104,7 @@ func (p *postgresForumRepository) SelectUser(user string) (models.User, error) {
 
 func (p *postgresForumRepository) SelectUserByEmail(user models.User) (models.User, error) {
 	var userModel models.User
-	row := p.Conn.QueryRow(`Select nickname, email from users Where email=$1;`, user.Email)
+	row := p.Conn.QueryRow(`Select nickname, email from users Where email=$1 LIMIT 1;`, user.Email)
 	err := row.Scan(&userModel.Nickname, &userModel.Email)
 	if err != nil {
 		return models.User{}, nil
@@ -117,29 +117,40 @@ func (p *postgresForumRepository) SelectUserByEmail(user models.User) (models.Us
 
 func (p *postgresForumRepository) UpdateUserInfo(user models.User) (models.User, error) {
 	var err error
-	if user.FullName != "" {
-		_, err = p.Conn.Exec(`UPDATE users SET fullname=$1 WHERE nickname=$2;`, user.FullName, user.Nickname)
-		if err != nil {
-			return models.User{}, err
-		}
-	}
+	var newUser models.User
 
-	if user.About != "" {
-		_, err = p.Conn.Exec(`UPDATE users SET about=$1 WHERE nickname=$2;`, user.About, user.Nickname)
-		if err != nil {
-			return models.User{}, err
-		}
-	}
+	err = p.Conn.QueryRow(
+		`UPDATE users SET email=COALESCE(NULLIF($1, ''), email), 
+							  about=COALESCE(NULLIF($2, ''), about), 
+							  fullname=COALESCE(NULLIF($3, ''), fullname) WHERE nickname=$4 RETURNING *`,
+		user.Email,
+		user.About,
+		user.FullName,
+		user.Nickname,
+	).Scan(&newUser.ID,&newUser.Nickname, &newUser.FullName, &newUser.About, &newUser.Email)
+	//if user.FullName != "" {
+	//	_, err = p.Conn.Exec(`UPDATE users SET fullname=$1 WHERE nickname=$2;`, user.FullName, user.Nickname)
+	//	if err != nil {
+	//		return models.User{}, err
+	//	}
+	//}
+	//
+	//if user.About != "" {
+	//	_, err = p.Conn.Exec(`UPDATE users SET about=$1 WHERE nickname=$2;`, user.About, user.Nickname)
+	//	if err != nil {
+	//		return models.User{}, err
+	//	}
+	//}
+	//
+	//
+	//if user.Email != "" {
+	//	_, err = p.Conn.Exec(`UPDATE users SET email=$1 WHERE nickname=$2;`, user.Email, user.Nickname)
+	//	if err != nil {
+	//		return models.User{}, err
+	//	}
+	//}
 
-
-	if user.Email != "" {
-		_, err = p.Conn.Exec(`UPDATE users SET email=$1 WHERE nickname=$2;`, user.Email, user.Nickname)
-		if err != nil {
-			return models.User{}, err
-		}
-	}
-
-	return user, nil
+	return newUser, err
 }
 
 func (p *postgresForumRepository) SelectThreadBySlug(slug string) (models.Thread, error) {
@@ -555,12 +566,16 @@ func (p *postgresForumRepository) PostParentTreeSort(threadId int, parameters mo
 
 func (p *postgresForumRepository) UpdateThread(thread models.Thread) (models.Thread, error) {
 	var row *pgx.Row
-
+	query := `UPDATE thread SET title=COALESCE(NULLIF($1, ''), title), message=COALESCE(NULLIF($2, ''), message) WHERE %s RETURNING *`
 
 	if thread.Slug == "" {
-		row = p.Conn.QueryRow(`UPDATE thread SET title=$1, message=$2 WHERE id=$3 RETURNING *`, thread.Title, thread.Message, thread.Id)
+		query = fmt.Sprintf(query, `id=$3`)
+		row = p.Conn.QueryRow(query, thread.Title, thread.Message, thread.Id)
+		//row = p.Conn.QueryRow(`UPDATE thread SET title=$1, message=$2 WHERE id=$3 RETURNING *`, thread.Title, thread.Message, thread.Id)
 	} else {
-		row = p.Conn.QueryRow(`UPDATE thread SET title=$1, message=$2 WHERE LOWER(slug)=LOWER($3) RETURNING *`, thread.Title, thread.Message, thread.Slug)
+		query = fmt.Sprintf(query, `slug=$3`)
+		row = p.Conn.QueryRow(query, thread.Title, thread.Message, thread.Slug)
+		//row = p.Conn.QueryRow(`UPDATE thread SET title=$1, message=$2 WHERE LOWER(slug)=LOWER($3) RETURNING *`, thread.Title, thread.Message, thread.Slug)
 	}
 
 	var newThread models.Thread

@@ -67,25 +67,28 @@ func (f *ForumUsecase) GetUser(nickname string) (models.User, error) {
 }
 
 func (f *ForumUsecase) ChangeUserProfile(user models.User) (models.User, error) {
-	_, err := f.forumRepo.SelectUser(user.Nickname)
-	if err != nil {
-		return models.User{}, err
-	}
-
-	_, err = f.forumRepo.SelectUserByEmail(user)
-	if err != nil {
-		return models.User{}, err
-	}
+	//_, err := f.forumRepo.SelectUser(user.Nickname)
+	//if err != nil {
+	//	return models.User{}, err
+	//}
+	//
+	//_, err = f.forumRepo.SelectUserByEmail(user)
+	//if err != nil {
+	//	return models.User{}, err
+	//}
 
 	userModel, err := f.forumRepo.UpdateUserInfo(user)
 	if err != nil {
-		return models.User{}, err
+		if pgErr, ok := err.(pgx.PgError); ok && pgErr.Code == "23505" {
+			return models.User{}, models.ErrConflict
+		}
+		return models.User{}, models.ErrNotFound
 	}
 
-	userModel, err = f.forumRepo.SelectUser(user.Nickname)
-	if err != nil {
-		return models.User{}, err
-	}
+	//userModel, err = f.forumRepo.SelectUser(user.Nickname)
+	//if err != nil {
+	//	return models.User{}, err
+	//}
 
 	return userModel, nil
 }
@@ -303,26 +306,26 @@ func (f *ForumUsecase) GetPostsOfThread(threadId int, parameters models.Paramete
 }
 
 func (f *ForumUsecase) UpdateThread(thread models.Thread) (models.Thread, error) {
-	var oldThread models.Thread
-	var err error
-	if thread.Slug == "" {
-		oldThread, err = f.forumRepo.SelectThreadById(thread.Id)
-		if err != nil {
-			return models.Thread{}, err
-		}
-	} else {
-		oldThread, err = f.forumRepo.SelectThreadBySlug(thread.Slug)
-		if err != nil {
-			return models.Thread{}, err
-		}
-	}
-
-	if thread.Title == "" {
-		thread.Title = oldThread.Title
-	}
-	if thread.Message == "" {
-		thread.Message = oldThread.Message
-	}
+	//var oldThread models.Thread
+	//var err error
+	//if thread.Slug == "" {
+	//	oldThread, err = f.forumRepo.SelectThreadById(thread.Id)
+	//	if err != nil {
+	//		return models.Thread{}, err
+	//	}
+	//} else {
+	//	oldThread, err = f.forumRepo.SelectThreadBySlug(thread.Slug)
+	//	if err != nil {
+	//		return models.Thread{}, err
+	//	}
+	//}
+	//
+	//if thread.Title == "" {
+	//	thread.Title = oldThread.Title
+	//}
+	//if thread.Message == "" {
+	//	thread.Message = oldThread.Message
+	//}
 
 	return f.forumRepo.UpdateThread(thread)
 }

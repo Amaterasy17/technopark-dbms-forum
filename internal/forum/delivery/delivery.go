@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -249,7 +248,6 @@ func (f *ForumHandler) ProfileUser(w http.ResponseWriter, r *http.Request) {
 
 func (f *ForumHandler) ChangeProfileInformation(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Println("change profile user")
 	nickname := strings.TrimPrefix(r.URL.Path, "/api/user/")
 	nickname = strings.TrimSuffix(nickname, "/profile")
 
@@ -266,7 +264,6 @@ func (f *ForumHandler) ChangeProfileInformation(w http.ResponseWriter, r *http.R
 
 	userModel, err := f.ForumUseCase.ChangeUserProfile(user)
 	if err != nil {
-
 		w.WriteHeader(models.GetStatusCodeGet(err))
 		w.Write(JSONError(err.Error()))
 		return
