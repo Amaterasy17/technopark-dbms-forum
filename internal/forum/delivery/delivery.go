@@ -457,7 +457,13 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 	slug := strings.TrimPrefix(r.URL.Path, "/api/thread/")
 	slug = strings.TrimSuffix(slug, "/vote")
 
-	thread, err := f.ForumUseCase.ThreadDetails(slug)
+	var thread models.Thread
+	id, err := strconv.Atoi(slug)
+	if err != nil {
+		thread, err = f.ForumUseCase.ThreadDetails(slug)
+	}
+
+	//thread, err := f.ForumUseCase.ThreadDetails(slug)
 	if err != nil {
 
 		w.WriteHeader(models.GetStatusCodeGet(err))
@@ -472,7 +478,12 @@ func (f *ForumHandler) MakeVote(w http.ResponseWriter, r *http.Request)  {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	vote.Thread = thread.Id
+
+	if thread.Id != 0 {
+		id = thread.Id
+	}
+
+	vote.Thread = id
 
 	thread, err = f.ForumUseCase.MakeVote(vote, thread)
 	if err != nil {

@@ -311,14 +311,13 @@ func (p *postgresForumRepository) UpdatePost(post models.Post, postUpdate models
 		if err != nil {
 			return post, err
 		}
-	//post.Author = p.SelectNickById(post.AuthorId)
 	return post, nil
 }
 
 
 func (p *postgresForumRepository) SelectPost(id int) (models.Post, error) {
 	var postModel models.Post
-	row := p.Conn.QueryRow(`Select id, author, created, forum, isEdited, message, parent, thread from post Where id=$1;`, id)
+	row := p.Conn.QueryRow(`Select id, author, created, forum, isEdited, message, parent, thread from post Where id=$1 LIMIT 1;`, id)
 	err := row.Scan(&postModel.ID, &postModel.Author, &postModel.Created, &postModel.Forum,  &postModel.IsEdited,
 		&postModel.Message, &postModel.Parent, &postModel.Thread)
 	if err != nil {
@@ -438,18 +437,18 @@ func (p *postgresForumRepository) PostFlatSort(id int, parameters models.Paramet
 	if parameters.Since == "" {
 		if parameters.Desc {
 			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
-		WHERE thread=$1 ORDER BY created DESC, id DESC LIMIT $2;`, id, parameters.Limit)
+		WHERE thread=$1 ORDER BY id DESC LIMIT $2;`, id, parameters.Limit)
 		} else {
 			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
-		WHERE thread=$1 ORDER BY created, id LIMIT $2;`, id, parameters.Limit)
+		WHERE thread=$1 ORDER BY id LIMIT $2;`, id, parameters.Limit)
 		}
 	} else {
 		if parameters.Desc {
 			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
-		WHERE thread=$1 AND id < $2 ORDER BY created DESC, id DESC LIMIT $3;`, id, parameters.Since, parameters.Limit)
+		WHERE thread=$1 AND id < $2 ORDER BY id DESC LIMIT $3;`, id, parameters.Since, parameters.Limit)
 		} else {
 			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
-		WHERE thread=$1 AND id > $2 ORDER BY created, id LIMIT $3;`, id, parameters.Since, parameters.Limit)
+		WHERE thread=$1 AND id > $2 ORDER BY id LIMIT $3;`, id, parameters.Since, parameters.Limit)
 		}
 	}
 
@@ -465,7 +464,6 @@ func (p *postgresForumRepository) PostFlatSort(id int, parameters models.Paramet
 			return posts, err
 		}
 
-		//post.Author = p.SelectNickById(post.AuthorId)
 		posts = append(posts, post)
 	}
 	return posts, nil
