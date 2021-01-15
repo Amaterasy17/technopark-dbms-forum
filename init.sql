@@ -1,15 +1,15 @@
 CREATE EXTENSION IF NOT EXISTS citext;
 
-ALTER SYSTEM SET
-    checkpoint_completion_target = '0.9';
-ALTER SYSTEM SET
-    wal_buffers = '6912kB';
-ALTER SYSTEM SET
-    default_statistics_target = '100';
-ALTER SYSTEM SET
-    random_page_cost = '1.1';
-ALTER SYSTEM SET
-    effective_io_concurrency = '200';
+-- ALTER SYSTEM SET
+--     checkpoint_completion_target = '0.9';
+-- ALTER SYSTEM SET
+--     wal_buffers = '6912kB';
+-- ALTER SYSTEM SET
+--     default_statistics_target = '100';
+-- ALTER SYSTEM SET
+--     random_page_cost = '1.1';
+-- ALTER SYSTEM SET
+--     effective_io_concurrency = '200';
 
 
 CREATE UNLOGGED TABLE users
@@ -71,6 +71,9 @@ CREATE UNLOGGED TABLE votes
 CREATE UNLOGGED TABLE users_forum
 (
     nickname citext NOT NULL,
+    fullname TEXT NOT NULL,
+    about    TEXT,
+    email    CITEXT,
     slug     citext NOT NULL,
     FOREIGN KEY (nickname) REFERENCES "users" (nickname),
     FOREIGN KEY (slug) REFERENCES "forum" (slug),
@@ -89,8 +92,14 @@ $update_vote$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION updatePostUserForum() RETURNS TRIGGER AS
 $update_forum_post$
+DECLARE
+    m_fullname CITEXT;
+    m_about    CITEXT;
+    m_email CITEXT;
 BEGIN
-    INSERT INTO users_forum (nickname, Slug) VALUES (New.Author, NEW.forum) on conflict do nothing;
+    SELECT fullname, about, email FROM users WHERE nickname = NEW.author INTO m_fullname, m_about, m_email;
+    INSERT INTO users_forum (nickname, fullname, about, email, Slug)
+     VALUES (New.Author,m_fullname, m_about, m_email, NEW.forum) on conflict do nothing;
     return NEW;
 end
 $update_forum_post$ LANGUAGE plpgsql;
@@ -99,9 +108,13 @@ CREATE OR REPLACE FUNCTION updateThreadUserForum() RETURNS TRIGGER AS
 $update_forum_thread$
 DECLARE
     author_nick citext;
+    m_fullname CITEXT;
+    m_about    CITEXT;
+    m_email CITEXT;
 BEGIN
-    SELECT Nickname FROM users WHERE id = new.Author INTO author_nick;
-    INSERT INTO users_forum (nickname, Slug) VALUES (author_nick, NEW.forum) on conflict do nothing;
+    SELECT Nickname, fullname, about, email FROM users WHERE id = new.Author INTO author_nick, m_fullname, m_about, m_email;
+    INSERT INTO users_forum (nickname, fullname, about, email, Slug)
+     VALUES (author_nick,m_fullname, m_about, m_email, NEW.forum) on conflict do nothing;
     return NEW;
 end
 $update_forum_thread$ LANGUAGE plpgsql;
@@ -188,8 +201,8 @@ CREATE TRIGGER thread_insert_user_forum
     FOR EACH ROW
 EXECUTE PROCEDURE updateThreadUserForum();
 
-CREATE INDEX post_parent_thread_index ON post (id DESC, thread, parent);
-CREATE INDEX post_parent_thread_index_desc ON post (id ASC, thread, parent);
+CREATE INDEX post_parent_thread_index ON post (id DESC, thread, parent) WHERE parent IS NULL;
+CREATE INDEX post_parent_thread_index_desc ON post (id ASC, thread, parent) WHERE parent IS NULL;
 CREATE INDEX post_first_parent_thread_index ON post (id DESC, thread, parent, (post.path[1])) WHERE parent IS NULL;
 CREATE INDEX post_first_parent_thread_index_desc ON post (id ASC, thread, parent, (post.path[1])) WHERE parent IS NULL;
 CREATE INDEX post_first_parent_id_index ON post (id, (post.path[1]));
@@ -212,6 +225,7 @@ CREATE INDEX users_email_index ON users (email);
 CREATE UNIQUE INDEX users_nickname_all_index ON users (nickname ASC, email, fullname, about);
 CLUSTER users using users_nickname_all_index;
 CREATE UNIQUE INDEX users_nickname_all_index_desc ON users (nickname DESC, email, fullname, about);
+                                                                                                                                    
 
 
 
