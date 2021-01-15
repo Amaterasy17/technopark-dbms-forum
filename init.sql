@@ -218,10 +218,10 @@ CREATE INDEX if not exists thr_forum_date ON thread (forum, created);
 create index if not exists post_id_path on post (id, (path[1]));
 create index if not exists post_thread_id_path1_parent on post (id, thread, (path[1]), parent);
 create index if not exists post_thread_path_id on post (id, thread, path);
--- create index if not exists post_thread_parent_id on post (id, thread, parent) WHERE parent is Null;
---
--- create index if not exists post_thread_path_id_desc on post (thread, id Desc, path DESC);
--- create index if not exists post_thread_path_id_asc on post (thread, id ASC, path ASC);
+create index if not exists post_thread_parent_id on post (id, thread, parent) WHERE parent is Null;
+
+create index if not exists post_thread_path_id_desc on post (thread, id Desc, path DESC);
+create index if not exists post_thread_path_id_asc on post (thread, id ASC, path ASC);
 
 create index if not exists post_path1 on post ((path[1]));
 create index if not exists post_thread_id on post (id, thread);
