@@ -229,8 +229,8 @@ CREATE INDEX if not exists post_thr_id ON post (thread);
 
 create unique index if not exists vote_unique on votes (Author, Thread);
 
-CREATE INDEX IF NOT EXISTS post_path1_path_id_desc ON post ((path[1]) DESC, path, id);
-CREATE INDEX IF NOT EXISTS post_path1_path_id_asc ON post ((path[1]) ASC, path, id);
+-- CREATE INDEX IF NOT EXISTS post_path1_path_id_desc ON post ((path[1]) DESC, path, id);
+-- CREATE INDEX IF NOT EXISTS post_path1_path_id_asc ON post ((path[1]) ASC, path, id);
 
 
 
