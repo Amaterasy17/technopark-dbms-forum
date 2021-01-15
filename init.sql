@@ -205,7 +205,6 @@ EXECUTE PROCEDURE updateThreadUserForum();
 
 CREATE INDEX if not exists user_nickname ON users using hash (nickname);
 CREATE INDEX if not exists user_email ON users using hash (email);
-
 CREATE INDEX if not exists forum_slug ON forum using hash (slug);
 
 create unique index if not exists forum_users_unique on users_forum (slug, nickname);
@@ -217,13 +216,21 @@ CREATE INDEX if not exists thr_forum ON thread using hash (forum);
 CREATE INDEX if not exists thr_forum_date ON thread (forum, created);
 
 create index if not exists post_id_path on post (id, (path[1]));
-create index if not exists post_thread_id_path1_parent on post (thread, id, (path[1]), parent);
-create index if not exists post_thread_path_id on post (thread, path, id);
+create index if not exists post_thread_id_path1_parent on post (id, thread, (path[1]), parent);
+create index if not exists post_thread_path_id on post (id, thread, path);
+-- create index if not exists post_thread_parent_id on post (id, thread, parent) WHERE parent is Null;
+--
+-- create index if not exists post_thread_path_id_desc on post (thread, id Desc, path DESC);
+-- create index if not exists post_thread_path_id_asc on post (thread, id ASC, path ASC);
+
 create index if not exists post_path1 on post ((path[1]));
-create index if not exists post_thread_id on post (thread, id);
+create index if not exists post_thread_id on post (id, thread);
 CREATE INDEX if not exists post_thr_id ON post (thread);
 
 create unique index if not exists vote_unique on votes (Author, Thread);
+
+CREATE INDEX IF NOT EXISTS post_path1_path_id_desc ON post ((path[1]) DESC, path, id);
+CREATE INDEX IF NOT EXISTS post_path1_path_id_asc ON post ((path[1]) ASC, path, id);
 
 
 

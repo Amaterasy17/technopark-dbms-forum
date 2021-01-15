@@ -477,7 +477,7 @@ func (p *postgresForumRepository) PostTreeSort(threadId int, parameters models.P
 	if parameters.Since == "" {
 		if parameters.Desc {
 			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
-		WHERE thread=$1 ORDER BY path DESC, id  DESC LIMIT $2;`, threadId, parameters.Limit)
+		WHERE thread=$1 ORDER BY path DESC, id DESC LIMIT $2;`, threadId, parameters.Limit)
 		} else {
 			rows, err = p.Conn.Query(`SELECT id, author, created, forum, isEdited, message, parent, thread FROM post
 		WHERE thread=$1 ORDER BY path ASC, id  ASC LIMIT $2;`, threadId, parameters.Limit)
