@@ -19,7 +19,7 @@ func NewPostgresForumRepository(Conn *pgx.ConnPool) domain.ForumRepository {
 
 func (p *postgresForumRepository) InsertForum(forum models.Forum) error {
 	_, err := p.Conn.Exec(	`Insert INTO forum(Slug, "user", Title) VALUES ($1, $2, $3);`,
-		forum.Slug, forum.UserId, forum.Title)
+		forum.Slug, forum.User, forum.Title)
 	if err != nil {
 		return err
 	}
@@ -30,11 +30,11 @@ func (p *postgresForumRepository) SelectForum(forumName string) (models.Forum, e
 	var forum models.Forum
 	row := p.Conn.QueryRow(`Select slug, "user", title, posts, threads From forum
 				Where slug=$1 LIMIT 1`, forumName)
-	err := row.Scan(&forum.Slug, &forum.UserId, &forum.Title, &forum.Posts, &forum.Threads)
+	err := row.Scan(&forum.Slug, &forum.User, &forum.Title, &forum.Posts, &forum.Threads)
 	if err != nil {
 		return models.Forum{}, models.ErrNotFound
 	}
-	forum.User = p.SelectNicknameForum(forum.UserId)
+	//forum.User = p.SelectNicknameForum(forum.UserId)
 	return forum, nil
 }
 
@@ -94,8 +94,8 @@ func (p *postgresForumRepository) InsertUser(user models.User) error {
 
 func (p *postgresForumRepository) SelectUser(user string) (models.User, error) {
 	var userModel models.User
-	row := p.Conn.QueryRow(`Select id, Nickname, FullName, About, Email From users Where nickname=$1 LIMIT 1;`, user)
-	err := row.Scan(&userModel.ID, &userModel.Nickname, &userModel.FullName, &userModel.About, &userModel.Email)
+	row := p.Conn.QueryRow(`Select Nickname, FullName, About, Email From users Where nickname=$1 LIMIT 1;`, user)
+	err := row.Scan(&userModel.Nickname, &userModel.FullName, &userModel.About, &userModel.Email)
 	if err != nil {
 		return models.User{}, models.ErrNotFound
 	}
@@ -127,7 +127,7 @@ func (p *postgresForumRepository) UpdateUserInfo(user models.User) (models.User,
 		user.About,
 		user.FullName,
 		user.Nickname,
-	).Scan(&newUser.ID,&newUser.Nickname, &newUser.FullName, &newUser.About, &newUser.Email)
+	).Scan(&newUser.Nickname, &newUser.FullName, &newUser.About, &newUser.Email)
 	//if user.FullName != "" {
 	//	_, err = p.Conn.Exec(`UPDATE users SET fullname=$1 WHERE nickname=$2;`, user.FullName, user.Nickname)
 	//	if err != nil {
@@ -157,12 +157,12 @@ func (p *postgresForumRepository) SelectThreadBySlug(slug string) (models.Thread
 	var thread models.Thread
 	row := p.Conn.QueryRow(`Select id, title, author, forum, message, votes, slug, created from thread
 							Where slug=$1 LIMIT 1;`, slug)
-	err := row.Scan(&thread.Id, &thread.Title, &thread.AuthorId, &thread.Forum, &thread.Message, &thread.Votes,
+	err := row.Scan(&thread.Id, &thread.Title, &thread.Author, &thread.Forum, &thread.Message, &thread.Votes,
 					&thread.Slug, &thread.Created)
 	if err != nil {
 		return models.Thread{}, models.ErrNotFound
 	}
-	thread.Author = p.SelectNicknameForum(thread.AuthorId)
+	//thread.Author = p.SelectNicknameForum(thread.AuthorId)
 	return thread, nil
 }
 
@@ -171,16 +171,16 @@ func (p *postgresForumRepository) InsertThread(thread models.Thread) (models.Thr
 	var row *pgx.Row
 
 	row = p.Conn.QueryRow(	`Insert INTO thread(Title, Author, Created, Forum, Message, slug, Votes)
-							VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`, thread.Title, thread.AuthorId, thread.Created,
+							VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`, thread.Title, thread.Author, thread.Created,
 							thread.Forum,
 			thread.Message, thread.Slug, thread.Votes)
 
-	err := row.Scan(&newThread.Id,&newThread.Title, &newThread.AuthorId, &newThread.Created,
+	err := row.Scan(&newThread.Id,&newThread.Title, &newThread.Author, &newThread.Created,
 		&newThread.Forum, &newThread.Message, &newThread.Slug, &newThread.Votes)
 	if err != nil {
 		return models.Thread{},err
 	}
-	newThread.Author = p.SelectNicknameForum(newThread.AuthorId)
+	//newThread.Author = p.SelectNicknameForum(newThread.AuthorId)
 	return newThread, nil
 }
 
@@ -189,12 +189,12 @@ func (p *postgresForumRepository) SelectThreadById(id int) (models.Thread, error
 	row := p.Conn.QueryRow(`Select id, title, author, forum, message, votes, slug, created from thread
 							Where id=$1 LIMIT 1;`, id)
 
-	err := row.Scan(&thread.Id, &thread.Title, &thread.AuthorId, &thread.Forum, &thread.Message, &thread.Votes,
+	err := row.Scan(&thread.Id, &thread.Title, &thread.Author, &thread.Forum, &thread.Message, &thread.Votes,
 		&thread.Slug, &thread.Created)
 	if err != nil {
 		return models.Thread{}, models.ErrNotFound
 	}
-	thread.Author = p.SelectNicknameForum(thread.AuthorId)
+	//thread.Author = p.SelectNicknameForum(thread.AuthorId)
 	return thread, nil
 }
 
@@ -358,12 +358,12 @@ func (p *postgresForumRepository) SelectThreads(slug string, params models.Param
 
 	for rows.Next() {
 		var thread models.Thread
-		err = rows.Scan(&thread.Id, &thread.AuthorId, &thread.Created, &thread.Forum, &thread.Message,
+		err = rows.Scan(&thread.Id, &thread.Author, &thread.Created, &thread.Forum, &thread.Message,
 			&thread.Slug, &thread.Title, &thread.Votes)
 		if err != nil {
 			continue
 		}
-		thread.Author = p.SelectNicknameForum(thread.AuthorId)
+		//thread.Author = p.SelectNicknameForum(thread.AuthorId)
 		threads = append(threads, thread)
 	}
 	return threads, nil
@@ -581,7 +581,7 @@ func (p *postgresForumRepository) UpdateThread(thread models.Thread) (models.Thr
 	err := row.Scan(
 		&newThread.Id,
 		&newThread.Title,
-		&newThread.AuthorId,
+		&newThread.Author,
 		&newThread.Created,
 		&newThread.Forum,
 		&newThread.Message,
@@ -589,7 +589,7 @@ func (p *postgresForumRepository) UpdateThread(thread models.Thread) (models.Thr
 		&newThread.Votes,
 	)
 
-	newThread.Author = p.SelectNickById(newThread.AuthorId)
+	//newThread.Author = p.SelectNickById(newThread.AuthorId)
 
 	if err != nil {
 		fmt.Println(err)

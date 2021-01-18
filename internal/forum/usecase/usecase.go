@@ -111,7 +111,7 @@ func (f *ForumUsecase) CreatingThread(thread models.Thread) (models.Thread, erro
 	if err != nil {
 		return models.Thread{}, err
 	}
-	thread.AuthorId = user.ID
+	thread.Author = user.Nickname
 	thread.Forum = forum.Slug
 
 	if (thread.Slug != "") {

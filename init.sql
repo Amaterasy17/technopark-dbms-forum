@@ -14,8 +14,7 @@ CREATE EXTENSION IF NOT EXISTS citext;
 
 CREATE UNLOGGED TABLE users
 (
-    Id       Serial PRIMARY KEY,
-    Nickname citext UNIQUE,
+    Nickname citext Primary Key,
     FullName text NOT NULL,
     About    text,
     Email    citext UNIQUE
@@ -24,7 +23,7 @@ CREATE UNLOGGED TABLE users
 CREATE UNLOGGED TABLE forum
 (
     Slug    citext PRIMARY KEY,
-    "user"  int,
+    "user"  citext,
     Title   text NOT NULL,
     Posts   BIGINT DEFAULT 0,
     Threads INT    DEFAULT 0
@@ -34,7 +33,7 @@ CREATE UNLOGGED TABLE thread
 (
     id      SERIAL PRIMARY KEY,
     Title   text not null,
-    Author  int REFERENCES "users" (id),
+    Author  citext REFERENCES "users" (Nickname),
     Created timestamp with time zone default now(),
     Forum   citext REFERENCES "forum" (slug),
     Message text NOT NULL,
@@ -112,7 +111,7 @@ DECLARE
     m_about    CITEXT;
     m_email CITEXT;
 BEGIN
-    SELECT Nickname, fullname, about, email FROM users WHERE id = new.Author INTO author_nick, m_fullname, m_about, m_email;
+    SELECT Nickname, fullname, about, email FROM users WHERE Nickname = new.Author INTO author_nick, m_fullname, m_about, m_email;
     INSERT INTO users_forum (nickname, fullname, about, email, Slug)
      VALUES (author_nick,m_fullname, m_about, m_email, NEW.forum) on conflict do nothing;
     return NEW;
@@ -202,7 +201,7 @@ CREATE TRIGGER thread_insert_user_forum
 EXECUTE PROCEDURE updateThreadUserForum();
 
 
-CREATE INDEX if not exists user_id ON users using hash (Id);
+
 CREATE INDEX if not exists user_nickname ON users using hash (nickname);
 CREATE INDEX if not exists user_email ON users using hash (email);
 CREATE INDEX if not exists forum_slug ON forum using hash (slug);
