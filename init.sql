@@ -1,15 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS citext;
 
--- ALTER SYSTEM SET
---     checkpoint_completion_target = '0.9';
--- ALTER SYSTEM SET
---     wal_buffers = '6912kB';
--- ALTER SYSTEM SET
---     default_statistics_target = '100';
--- ALTER SYSTEM SET
---     random_page_cost = '1.1';
--- ALTER SYSTEM SET
---     effective_io_concurrency = '200';
+
 
 
 CREATE UNLOGGED TABLE users
@@ -207,7 +198,7 @@ CREATE INDEX if not exists user_email ON users using hash (email);
 CREATE INDEX if not exists forum_slug ON forum using hash (slug);
 
 create unique index if not exists forum_users_unique on users_forum (slug, nickname);
-cluster users_forum using forum_users_unique;
+-- cluster users_forum using forum_users_unique;
 
 CREATE INDEX if not exists thr_slug ON thread using hash (slug);
 CREATE INDEX if not exists thr_date ON thread (created);
